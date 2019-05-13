@@ -26,7 +26,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             var key = config.Get(Parameters.ApiKey);
             if (key.Length != 32)
             {
-                throw new InvalidOperationException("One or more invalid API subscription keys.");
+                throw new InvalidOperationException("Invalid API subscription keys.");
             }
 
             this.key = key;
@@ -103,10 +103,12 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             }
         }
 
+        private string key;
+
         internal class Constants
         {
             internal const string Name = "AzureTranslatorTextConnector";
-            internal const string Title = "Azure Translator Text Connector";           
+            internal const string Title = "Azure Translator Text Connector";
             internal const string TEXT_TRANSLATION_API_ENDPOINT = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0";
         }
 
@@ -114,7 +116,5 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         {
             internal const string ApiKey = "apiKey";
         }
-
-        private string key;
     }
 }
