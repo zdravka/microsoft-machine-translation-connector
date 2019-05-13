@@ -24,9 +24,14 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         protected override void InitializeConnector(NameValueCollection config)
         {
             var key = config.Get(Parameters.ApiKey);
-            if (key.Length != 32)
+            if (string.IsNullOrEmpty(key))
             {
-                throw new InvalidOperationException("Invalid API subscription keys.");
+                throw new ArgumentException(Constants.NoApiKeyExceptionMessage);
+            }
+
+            if (key.Length != Constants.ValidApiKeyLength)
+            {
+                throw new ArgumentException(Constants.InvalidApiKeyExceptionMessage);
             }
 
             this.key = key;
@@ -38,12 +43,17 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             var toLanguageCode = translationOptions.TargetLanguage;
             if (string.IsNullOrWhiteSpace(fromLanguageCode))
             {
-                throw new ArgumentException("Parameter cannot be null or empty " + nameof(fromLanguageCode));
+                throw new ArgumentException(GetTranslаteArgumentExceptionMessage($"{nameof(translationOptions)}.{nameof(translationOptions.SourceLanguage)}", translationOptions.SourceLanguage.GetType()));
             }
 
             if (string.IsNullOrWhiteSpace(toLanguageCode))
             {
-                throw new ArgumentException("Parameter cannot be null or empty " + nameof(toLanguageCode));
+                throw new ArgumentException(GetTranslаteArgumentExceptionMessage($"{nameof(translationOptions)}.{nameof(translationOptions.TargetLanguage)}", translationOptions.SourceLanguage.GetType()));
+            }
+
+            if (input == null || input.Count == 0)
+            {
+                throw new ArgumentException(GetTranslаteArgumentExceptionMessage(nameof(input), input.GetType()));
             }
 
             if (fromLanguageCode == toLanguageCode)
@@ -56,7 +66,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             var body = new List<object>();
             foreach (var text in input)
             {
-                body.Add(new { Text = text.Trim() });
+                body.Add(new { Text = text });
             }
 
             var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
@@ -93,6 +103,11 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             }
         }
 
+        private static string GetTranslаteArgumentExceptionMessage(string paramName, Type paramType)
+        {
+            return string.Format(Constants.InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate, paramName, paramType);
+        }
+
         private void HandleApiError(string responseBody)
         {
             var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
@@ -108,8 +123,14 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         internal class Constants
         {
             internal const string Name = "AzureTranslatorTextConnector";
+            internal const string InvalidApiKeyExceptionMessage = "Invalid API subscription keys.";
+            internal const string NoApiKeyExceptionMessage = "No API key configured for azure translations connector.";
+            internal const string InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix = "Invalid parameter for azure translation request.";
+            internal const string InvalidParameterExceptionMessageTemplate = "Parameter with name {0} of type {1} cannot be null or empty.";
             internal const string Title = "Azure Translator Text Connector";
             internal const string TEXT_TRANSLATION_API_ENDPOINT = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0";
+            internal const int ValidApiKeyLength = 32;
+            internal static readonly string InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate = InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix + " " + InvalidParameterExceptionMessageTemplate;
         }
 
         internal struct Parameters

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Web;
 using Telerik.Sitefinity.Translations.AzureTranslator;
@@ -37,3 +38,4 @@ using Telerik.Sitefinity.Translations.AzureTranslator;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: InternalsVisibleTo("Telerik.Sitefinity.Translations.AzureTranslator.Tests")]
