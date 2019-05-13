@@ -14,5 +14,16 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         {
             throw new System.NotImplementedException();
         }
+
+        internal class Constants
+        {
+            internal const string Name = "AzureTranslatorTextConnector";
+            internal const string Title = "Azure Translator Text Connector";           
+        }
+
+        internal struct Parameters
+        {
+            internal const string ApiKey = "apiKey";
+        }
     }
 }
