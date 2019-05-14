@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
+using Telerik.Sitefinity.Translations.AzureTranslator.Exceptions;
 
 namespace Telerik.Sitefinity.Translations.AzureTranslator
 {
@@ -97,7 +98,21 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                     this.HandleApiError(responseBody, response);
                 }
 
-                dynamic result = serializer.DeserializeObject(responseBody);
+                dynamic result;
+                try
+                {
+                    result = serializer.DeserializeObject(responseBody);
+                }
+                catch (Exception ex)
+                {
+                    if (IsSerializationException(ex))
+                    {
+                        throw new AzureTranslatorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingResponseFromServer} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                    }
+
+                    throw;
+                }
+
                 var translations = new List<string>();
                 try
                 {
@@ -108,9 +123,14 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                         translations.Add(translation);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    throw new AzureTranslatorException($"{Constants.ExceptionMessages.UnexpectedResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                    if (ex is KeyNotFoundException || ex is NullReferenceException)
+                    {
+                        throw new AzureTranslatorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                    }
+
+                    throw;
                 }
 
                 return translations;
@@ -125,15 +145,39 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         private void HandleApiError(string responseBody, HttpResponseMessage response)
         {
             var serializer = new JavaScriptSerializer();
+            dynamic jsonResponse;
             try
             {
-                dynamic jsonResponse = serializer.DeserializeObject(responseBody);
+                jsonResponse = serializer.DeserializeObject(responseBody);
+            }
+            catch (Exception ex)
+            {
+                if (IsSerializationException(ex))
+                {
+                    throw new AzureTranslatorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingErrorResponseFromServer} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                }
+
+                throw;
+            }
+
+            try
+            {
                 throw new AzureTranslatorException(jsonResponse["error"]["message"]);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw new AzureTranslatorException($"{Constants.ExceptionMessages.UnexpectedErrorResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                if (ex is KeyNotFoundException || ex is NullReferenceException)
+                {
+                    throw new AzureTranslatorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedErrorResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                }
+
+                throw;
             }
+        }
+
+        private static bool IsSerializationException(Exception ex)
+        {
+            return ex is ArgumentException || ex is ArgumentNullException || ex is InvalidOperationException;
         }
 
         private string key;

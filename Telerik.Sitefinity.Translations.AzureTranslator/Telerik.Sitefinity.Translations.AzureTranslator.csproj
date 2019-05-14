@@ -85,7 +85,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AzureTranslatorException.cs" />
+    <Compile Include="Exceptions\AzureTranslatorException.cs" />
+    <Compile Include="Exceptions\AzureTranslatorResponseFormatException.cs" />
+    <Compile Include="Exceptions\AzureTranslatorSerializationException.cs" />
     <Compile Include="AzureTranslatorTextConnector.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

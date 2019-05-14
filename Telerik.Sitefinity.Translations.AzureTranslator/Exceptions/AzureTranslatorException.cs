@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Telerik.Sitefinity.Translations.AzureTranslator
+namespace Telerik.Sitefinity.Translations.AzureTranslator.Exceptions
 {
     /// <summary>
     /// Exception thrown when AzureTransaltorClient requests to Azure service receive error from server.
