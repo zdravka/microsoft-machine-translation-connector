@@ -18,6 +18,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.IntegrationTests
             var client = new RestClient(this.BaseUrl + "/Sitefinity/Authenticate/OpenID/connect/token");
             var request = new RestRequest(Method.POST);
 
+            // Make sure you have add this client to the authentication config.
             request.AddParameter("auth", "username=admin%40test.test&password=admin%402&grant_type=password&scope=openid&client_id=integration-tests&client_secret=secret", ParameterType.RequestBody);
             IRestResponse response = client.Execute(request);
 
