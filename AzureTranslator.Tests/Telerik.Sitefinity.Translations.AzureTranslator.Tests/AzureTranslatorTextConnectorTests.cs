@@ -146,5 +146,40 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 
             this.sut.TranslateCallMock(new List<string>() { "test" }, this.options);
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(AzureTranslatorException), "Expected unexpected successful response format to throw.")]
+        public void Translate_UnexpectedResponseFormat_Throws()
+        {
+            // arrange
+            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent(@"
+[{""strang_translations"" : [{""strange_text"":""result_text""}]}]
+")
+            };
+
+            // act
+            var result = this.sut.TranslateCallMock(new List<string>() { "stub_text" }, this.options);
+
+            // assert
+            Assert.AreEqual("result_text", result[0]);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(AzureTranslatorException), "Expected unexpected error response format to throw.")]
+        public void Translate_UnexpectedErrorFormat_Throws()
+        {
+            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            {
+                StatusCode = System.Net.HttpStatusCode.InternalServerError,
+                Content = new StringContent(@"
+{""strange_error"" : {""strange_message"":""test_error_message""}}
+")
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { "test" }, this.options);
+        }
     }
 }

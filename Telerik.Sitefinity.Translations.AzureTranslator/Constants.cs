@@ -14,6 +14,8 @@
             internal const string InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix = "Invalid parameter for azure translation request.";
             internal const string NullOrEmptyParameterExceptionMessageTemplate = "Parameter with name {0} cannot be null or empty.";
             internal static readonly string InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate = InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix + " " + NullOrEmptyParameterExceptionMessageTemplate;
+            internal static readonly string UnexpectedErrorResponseFormat = $"An error ocurred on the Azure server. {Constants.ExceptionMessages.UnexpectedResponseFormat}";
+            internal const string UnexpectedResponseFormat = "The response received was not in the expected format.";
         }
 
         internal struct ConfigParameters

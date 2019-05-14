@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Web.Script.Serialization;
 
 namespace Telerik.Sitefinity.Translations.AzureTranslator
 {
@@ -75,7 +76,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                 body.Add(new { Text = text ?? string.Empty });
             }
 
-            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+            var serializer = new JavaScriptSerializer();
             string requestBody = serializer.Serialize(body);
 
             using (var client = this.GetClient())
@@ -93,16 +94,23 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    this.HandleApiError(responseBody);
+                    this.HandleApiError(responseBody, response);
                 }
 
                 dynamic result = serializer.DeserializeObject(responseBody);
                 var translations = new List<string>();
-                for (int i = 0; i < input.Count(); i++)
+                try
                 {
-                    // currently Sitefinity does not support sending multiple languages at once, only multiple strings
-                    var translation = result[i]["translations"][0]["text"];
-                    translations.Add(translation);
+                    for (int i = 0; i < input.Count(); i++)
+                    {
+                        // currently Sitefinity does not support sending multiple languages at once, only multiple strings
+                        var translation = result[i]["translations"][0]["text"];
+                        translations.Add(translation);
+                    }
+                }
+                catch (Exception)
+                {
+                    throw new AzureTranslatorException($"{Constants.ExceptionMessages.UnexpectedResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                 }
 
                 return translations;
@@ -114,16 +122,21 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             return string.Format(Constants.ExceptionMessages.InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate, paramName);
         }
 
-        private void HandleApiError(string responseBody)
+        private void HandleApiError(string responseBody, HttpResponseMessage response)
         {
-            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-            dynamic jsonResponse = serializer.DeserializeObject(responseBody);
-            if (jsonResponse["error"] != null)
+            var serializer = new JavaScriptSerializer();
+            try
             {
+                dynamic jsonResponse = serializer.DeserializeObject(responseBody);
                 throw new AzureTranslatorException(jsonResponse["error"]["message"]);
+            }
+            catch (Exception)
+            {
+                throw new AzureTranslatorException($"{Constants.ExceptionMessages.UnexpectedErrorResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
             }
         }
 
         private string key;
+
     }
 }
