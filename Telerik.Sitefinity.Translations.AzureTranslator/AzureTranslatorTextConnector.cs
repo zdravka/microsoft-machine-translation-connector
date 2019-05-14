@@ -5,10 +5,15 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
-using Telerik.Sitefinity.Configuration;
+using Telerik.Sitefinity.Translations;
+using Telerik.Sitefinity.Translations.AzureTranslator;
 using Telerik.Sitefinity.Translations.AzureTranslator.Exceptions;
-using Telerik.Sitefinity.Translations.Configuration;
 
+[assembly: TranslationConnector(name: Constants.Name,
+                            connectorType: typeof(AzureTranslatorTextConnector),
+                            title: Constants.Title,
+                            enabled: true,
+                            parameters: new string[] { Constants.ConfigParameters.ApiKey })]
 namespace Telerik.Sitefinity.Translations.AzureTranslator
 {
     /// <summary>
@@ -155,9 +160,8 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         }
 
         protected virtual bool IsRemoveHtmlTagsEnabled()
-        {
-            var transaltionsConfig = Config.Get<TranslationsConfig>();
-            return transaltionsConfig.Connectors.Values.First(x => x.Name == Constants.Name).RemoveHtmlTags;
+        {            
+            return this.RemoveHtmlTags;
         }
 
         private static string GetTranslаteArgumentExceptionMessage(string paramName)
