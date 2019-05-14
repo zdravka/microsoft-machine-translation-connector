@@ -1,7 +1,6 @@
 # Progress.Sitefinity.Translations.AzureTranslator
 
-TODO Update Version
-### Latest supported version: Sitefinity CMS 12.0.7000.0
+### Latest supported version: Sitefinity CMS 12.1.7100.0
 
 When working with the Sitefinity CMS *Translation* module, you can benefit from a number of translation connectors that you use out-of-the-box with minimum setup.
 
