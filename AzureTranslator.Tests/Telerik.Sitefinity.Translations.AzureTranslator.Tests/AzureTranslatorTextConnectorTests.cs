@@ -14,6 +14,9 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
     {
         private TestableAzureTranslatorTextConnector sut;
         private MockedTranslationOptions options;
+        private const string SuccessfulTranslationResponseTemplate = "[{{\"translations\" : [{{\"text\":\"{0}\"}}]}}]";
+        private readonly string GenericTranslatedText = "translated_text";
+        private string GenericSuccessfulTranslationResponse => string.Format(SuccessfulTranslationResponseTemplate, GenericTranslatedText);
 
         [TestInitialize]
         public void TestInit()
@@ -97,7 +100,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         {
             // arrange
             string requestedTextForTranslation = null;
-            this.sut.sendAsyncDelegate = x =>
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
             {
                 var requestText = x.Content.ReadAsStringAsync().Result;
                 var serializer = new JavaScriptSerializer();
@@ -105,9 +108,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 
                 requestedTextForTranslation = result[0]["Text"];
 
-                return new HttpResponseMessage() { Content = new StringContent(@"
-[{""translations"" : [{""text"":""""}]}]
-") };
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
             };
 
             this.sut.TranslateCallMock(new List<string>() { null }, this.options);
@@ -118,26 +119,24 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         public void Translate_SuccessfulTransaltionsRequest_ReturnsCollectionWithTranslation()
         {
             // arrange
-            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
-                Content = new StringContent(@"
-[{""translations"" : [{""text"":""result_text""}]}]
-")
+                Content = new StringContent(GenericSuccessfulTranslationResponse)
             };
 
             // act
             var result = this.sut.TranslateCallMock(new List<string>() { "stub_text" }, this.options);
 
             // assert
-            Assert.AreEqual("result_text", result[0]);
+            Assert.AreEqual(GenericTranslatedText, result[0]);
         }
 
         [TestMethod]
         [ExpectedException(typeof(AzureTranslatorException), "Expected unsuccessful translation request to throw.")]
         public void Translate_UnsuccessfulTransaltions_Throws()
         {
-            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
             {
                 StatusCode = System.Net.HttpStatusCode.InternalServerError,
                 Content = new StringContent(@"
@@ -153,7 +152,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         public void Translate_UnexpectedResponseFormat_Throws()
         {
             // arrange
-            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
                 Content = new StringContent(@"
@@ -172,7 +171,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         [ExpectedException(typeof(AzureTranslatorResponseFormatException), "Expected unexpected error response format to throw.")]
         public void Translate_UnexpectedErrorFormat_Throws()
         {
-            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
             {
                 StatusCode = System.Net.HttpStatusCode.InternalServerError,
                 Content = new StringContent(@"
@@ -187,7 +186,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         [ExpectedException(typeof(AzureTranslatorSerializationException), "Expected error response wrong json format to throw.")]
         public void Translate_ErrorResponseBrokenJson_Throws()
         {
-            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
             {
                 StatusCode = System.Net.HttpStatusCode.InternalServerError,
                 Content = new StringContent(@"
@@ -203,7 +202,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         public void Translate_ResponseWrongJsonFormat_Throws()
         {
             // arrange
-            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
             {
                 StatusCode = System.Net.HttpStatusCode.OK,
                 Content = new StringContent(@"
@@ -216,6 +215,45 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 
             // assert
             Assert.AreEqual("result_text", result[0]);
+        }
+
+        [TestMethod]
+        public void Translate_WhenEnableHtmlContentSend_AddsCorrectQueryStringParamToRequest()
+        {
+            // arrange
+            string reqeustQueryString = null;
+            this.sut.MockedIsSendingHtmlEnabled = true;
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                reqeustQueryString = x.RequestUri.Query;
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+            var expected = $"{Constants.AzureTransalteEndpointConstants.TextTypeQueryParam}=html";
+            Assert.IsTrue(reqeustQueryString.Contains(expected), $"Expected {reqeustQueryString} to contain {expected}");
+        }
+
+        [TestMethod]
+        public void Translate_WhenSourceCultureIsCZAndTargetIsBG_SendsQueryStringParamWithSourceValueCZAndTargetValueBG()
+        {
+            // arrange
+            this.options.SourceLanguage = "CZ";
+            this.options.TargetLanguage = "BG";
+            string reqeustQueryString = null;
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                reqeustQueryString = x.RequestUri.Query;
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+            var bgExpectValue = $"{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam}=BG";
+            var czExpectValue = $"{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam}=CZ";
+            Assert.IsTrue(reqeustQueryString.Contains(bgExpectValue), $"Expected {reqeustQueryString} to contain {bgExpectValue}");
+            Assert.IsTrue(reqeustQueryString.Contains(czExpectValue), $"Expected {reqeustQueryString} to contain {czExpectValue}");
         }
 
     }

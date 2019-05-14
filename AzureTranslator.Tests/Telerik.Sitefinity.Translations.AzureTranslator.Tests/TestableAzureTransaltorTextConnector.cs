@@ -9,7 +9,8 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 {
     internal class TestableAzureTranslatorTextConnector : AzureTranslatorTextConnector
     {
-        public Func<HttpRequestMessage, HttpResponseMessage> sendAsyncDelegate { get; set; }
+        public Func<HttpRequestMessage, HttpResponseMessage> mockedHttpClientSendAsyncDelegate { get; set; }
+        public bool MockedIsSendingHtmlEnabled { get; set; }
 
         public void InitializeCallMock(NameValueCollection config)
         {
@@ -23,32 +24,37 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 
         protected override HttpClient GetClient()
         {
-            return new HttpClient(new MockedMessageHandler(this.sendAsyncDelegate));
-        }
-    }
-
-    internal class MockedMessageHandler : HttpMessageHandler
-    {
-        public MockedMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> sendAsyncDelegate)
-        {
-            this.sendAsyncDelegate = sendAsyncDelegate;
+            return new HttpClient(new MockedMessageHandler(this.mockedHttpClientSendAsyncDelegate));
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override bool IsSendingHtmlEnabled()
         {
-            if (this.sendAsyncDelegate != null)
+            return this.MockedIsSendingHtmlEnabled;
+        }
+
+        private class MockedMessageHandler : HttpMessageHandler
+        {
+            public MockedMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> sendAsyncDelegate)
             {
-                return Task.FromResult(this.sendAsyncDelegate(request));
+                this.sendAsyncDelegate = sendAsyncDelegate;
             }
-            else
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
-                return Task.FromResult(new HttpResponseMessage()
+                if (this.sendAsyncDelegate != null)
                 {
-                    StatusCode = System.Net.HttpStatusCode.NotImplemented
-                });
+                    return Task.FromResult(this.sendAsyncDelegate(request));
+                }
+                else
+                {
+                    return Task.FromResult(new HttpResponseMessage()
+                    {
+                        StatusCode = System.Net.HttpStatusCode.NotImplemented
+                    });
+                }
             }
-        }
 
-        private readonly Func<HttpRequestMessage, HttpResponseMessage> sendAsyncDelegate;
+            private readonly Func<HttpRequestMessage, HttpResponseMessage> sendAsyncDelegate;
+        }
     }
 }

@@ -5,7 +5,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
+using Telerik.Sitefinity.Configuration;
 using Telerik.Sitefinity.Translations.AzureTranslator.Exceptions;
+using Telerik.Sitefinity.Translations.Configuration;
 
 namespace Telerik.Sitefinity.Translations.AzureTranslator
 {
@@ -69,7 +71,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                 return input;
             }
 
-            string uri = string.Format(Constants.AzureTranslateApiEndpointUrl + "&from={0}&to={1}", fromLanguageCode, toLanguageCode);
+            string uri = GetAzureTranslateEndpointUri(fromLanguageCode, toLanguageCode);
 
             var body = new List<object>();
             foreach (var text in input)
@@ -135,6 +137,28 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
 
                 return translations;
             }
+        }
+
+        private string GetAzureTranslateEndpointUri(string fromLanguageCode, string toLanguageCode)
+        {
+            string uri = string.Format(
+                $"{Constants.AzureTransalteEndpointConstants.EndpointUrl}&{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam }={{0}}&{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam }={{1}}",
+                fromLanguageCode,
+                toLanguageCode);
+            if (IsSendingHtmlEnabled())
+            {
+
+                uri += $"&{Constants.AzureTransalteEndpointConstants.TextTypeQueryParam}=html";
+            }
+
+            return uri;
+        }
+
+        protected virtual bool IsSendingHtmlEnabled()
+        {
+            var transaltionsConfig = Config.Get<TranslationsConfig>();
+            var isSendingHtml = transaltionsConfig.Connectors.Values.First(x => x.Name == Constants.Name).RemoveHtmlTags;
+            return isSendingHtml;
         }
 
         private static string GetTranslаteArgumentExceptionMessage(string paramName)
