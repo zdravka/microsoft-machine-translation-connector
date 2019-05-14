@@ -10,10 +10,11 @@ using Telerik.Sitefinity.Translations.AzureTranslator;
 using Telerik.Sitefinity.Translations.AzureTranslator.Exceptions;
 
 [assembly: TranslationConnector(name: Constants.Name,
-                            connectorType: typeof(AzureTranslatorTextConnector),
-                            title: Constants.Title,
-                            enabled: true,
-                            parameters: new string[] { Constants.ConfigParameters.ApiKey })]
+                                connectorType: typeof(AzureTranslatorTextConnector),
+                                title: Constants.Title,
+                                enabled: true,
+                                removeHtmlTags: false, 
+                                parameters: new string[] { Constants.ConfigParameters.ApiKey })]
 namespace Telerik.Sitefinity.Translations.AzureTranslator
 {
     /// <summary>
