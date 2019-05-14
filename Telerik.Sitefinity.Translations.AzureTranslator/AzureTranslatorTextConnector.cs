@@ -157,7 +157,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         protected virtual bool IsSendingHtmlEnabled()
         {
             var transaltionsConfig = Config.Get<TranslationsConfig>();
-            var isSendingHtml = transaltionsConfig.Connectors.Values.First(x => x.Name == Constants.Name).RemoveHtmlTags;
+            var isSendingHtml = !transaltionsConfig.Connectors.Values.First(x => x.Name == Constants.Name).RemoveHtmlTags;
             return isSendingHtml;
         }
 
