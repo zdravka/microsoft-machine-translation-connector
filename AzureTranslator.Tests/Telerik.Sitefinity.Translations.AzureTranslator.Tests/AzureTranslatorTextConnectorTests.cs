@@ -10,6 +10,7 @@ using static Telerik.Sitefinity.Translations.AzureTranslator.AzureTranslatorText
 namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 {
     [TestClass]
+    [TestCategory("Unit Tests")]
     public class AzureTranslatorTextConnectorTests
     {
         private TestableAzureTranslatorTextConnector sut;
