@@ -26,7 +26,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         public void InitializeConnector_InvalidKeyLength_Throws()
         {
             var testConfig = new NameValueCollection();
-            testConfig.Add(Parameters.ApiKey, new string('*', Constants.ValidApiKeyLength + 1));
+            testConfig.Add(Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength + 1));
             this.sut.InitializeCallMock(testConfig);
         }
 

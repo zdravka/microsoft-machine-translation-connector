@@ -24,15 +24,15 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                 var configManager = ConfigManager.GetManager();
                 var translationsConfig = configManager.GetSection<TranslationsConfig>();
 
-                if (!translationsConfig.Connectors.ContainsKey(AzureTranslatorTextConnector.Constants.Name))
+                if (!translationsConfig.Connectors.ContainsKey(Constants.Name))
                 {
                     translationsConfig.Connectors.Add(new ConnectorSettings(translationsConfig.Connectors)
                     {
                         ConnectorType = typeof(AzureTranslatorTextConnector).FullName,
                         Enabled = true,
-                        Name = AzureTranslatorTextConnector.Constants.Name,
-                        Title = AzureTranslatorTextConnector.Constants.Title,
-                        Parameters = { { AzureTranslatorTextConnector.Parameters.ApiKey, string.Empty } }
+                        Name = Constants.Name,
+                        Title = Constants.Title,
+                        Parameters = { { Constants.ConfigParameters.ApiKey, string.Empty } }
                     });
 
                     configManager.SaveSection(translationsConfig, true);

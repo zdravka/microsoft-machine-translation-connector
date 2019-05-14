@@ -23,15 +23,15 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         /// <param name="config">apiKey key should contain the Azure Transaltor Text Api Service key.</param>
         protected override void InitializeConnector(NameValueCollection config)
         {
-            var key = config.Get(Parameters.ApiKey);
+            var key = config.Get(Constants.ConfigParameters.ApiKey);
             if (string.IsNullOrEmpty(key))
             {
-                throw new ArgumentException(Constants.NoApiKeyExceptionMessage);
+                throw new ArgumentException(Constants.ExceptionMessages.NoApiKeyExceptionMessage);
             }
 
             if (key.Length != Constants.ValidApiKeyLength)
             {
-                throw new ArgumentException(Constants.InvalidApiKeyExceptionMessage);
+                throw new ArgumentException(Constants.ExceptionMessages.InvalidApiKeyExceptionMessage);
             }
 
             this.key = key;
@@ -67,7 +67,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                 return input;
             }
 
-            string uri = string.Format(Constants.TEXT_TRANSLATION_API_ENDPOINT + "&from={0}&to={1}", fromLanguageCode, toLanguageCode);
+            string uri = string.Format(Constants.AzureTranslateApiEndpointUrl + "&from={0}&to={1}", fromLanguageCode, toLanguageCode);
 
             var body = new List<object>();
             foreach (var text in input)
@@ -111,7 +111,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
 
         private static string GetTranslаteArgumentExceptionMessage(string paramName)
         {
-            return string.Format(Constants.InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate, paramName);
+            return string.Format(Constants.ExceptionMessages.InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate, paramName);
         }
 
         private void HandleApiError(string responseBody)
@@ -125,23 +125,5 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         }
 
         private string key;
-
-        internal class Constants
-        {
-            internal const string Name = "AzureTranslatorTextConnector";
-            internal const string InvalidApiKeyExceptionMessage = "Invalid API subscription keys.";
-            internal const string NoApiKeyExceptionMessage = "No API key configured for azure translations connector.";
-            internal const string InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix = "Invalid parameter for azure translation request.";
-            internal const string NullOrEmptyParameterExceptionMessageTemplate = "Parameter with name {0} cannot be null or empty.";
-            internal const string Title = "Azure Translator Text Connector";
-            internal const string TEXT_TRANSLATION_API_ENDPOINT = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0";
-            internal const int ValidApiKeyLength = 32;
-            internal static readonly string InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate = InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix + " " + NullOrEmptyParameterExceptionMessageTemplate;
-        }
-
-        internal struct Parameters
-        {
-            internal const string ApiKey = "apiKey";
-        }
     }
 }

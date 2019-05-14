@@ -87,6 +87,7 @@
   <ItemGroup>
     <Compile Include="AzureTranslatorException.cs" />
     <Compile Include="AzureTranslatorTextConnector.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
