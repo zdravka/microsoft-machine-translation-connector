@@ -10,7 +10,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
     internal class TestableAzureTranslatorTextConnector : AzureTranslatorTextConnector
     {
         public Func<HttpRequestMessage, HttpResponseMessage> mockedHttpClientSendAsyncDelegate { get; set; }
-        public bool MockedIsSendingHtmlEnabled { get; set; }
+        public bool MockedIsRemoveHtmlTagsEnabled { get; set; }
 
         public void InitializeCallMock(NameValueCollection config)
         {
@@ -27,9 +27,9 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
             return new HttpClient(new MockedMessageHandler(this.mockedHttpClientSendAsyncDelegate));
         }
 
-        protected override bool IsSendingHtmlEnabled()
+        protected override bool IsRemoveHtmlTagsEnabled()
         {
-            return this.MockedIsSendingHtmlEnabled;
+            return this.MockedIsRemoveHtmlTagsEnabled;
         }
 
         private class MockedMessageHandler : HttpMessageHandler

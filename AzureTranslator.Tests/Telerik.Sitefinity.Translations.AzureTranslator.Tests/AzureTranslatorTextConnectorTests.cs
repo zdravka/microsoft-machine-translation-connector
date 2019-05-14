@@ -218,11 +218,11 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         }
 
         [TestMethod]
-        public void Translate_WhenEnableHtmlContentSend_AddsCorrectQueryStringParamToRequest()
+        public void Translate_WhenRemoveHtmlTagsDisabled_AddsCorrectQueryStringParamToRequest()
         {
             // arrange
             string reqeustQueryString = null;
-            this.sut.MockedIsSendingHtmlEnabled = true;
+            this.sut.MockedIsRemoveHtmlTagsEnabled = false;
             this.sut.mockedHttpClientSendAsyncDelegate = x =>
             {
                 reqeustQueryString = x.RequestUri.Query;
@@ -233,6 +233,24 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
             this.sut.TranslateCallMock(new List<string>() { null }, this.options);
             var expected = $"{Constants.AzureTransalteEndpointConstants.TextTypeQueryParam}=html";
             Assert.IsTrue(reqeustQueryString.Contains(expected), $"Expected {reqeustQueryString} to contain {expected}");
+        }
+
+        [TestMethod]
+        public void Translate_WhenRemoveHtmlTagsEnabled_DoesNotAddQueryStringParamToRequest()
+        {
+            // arrange
+            string reqeustQueryString = null;
+            this.sut.MockedIsRemoveHtmlTagsEnabled = true;
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                reqeustQueryString = x.RequestUri.Query;
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+            var expected = $"{Constants.AzureTransalteEndpointConstants.TextTypeQueryParam}=html";
+            Assert.IsFalse(reqeustQueryString.Contains(expected), $"Expected {reqeustQueryString} to not contain {expected}");
         }
 
         [TestMethod]

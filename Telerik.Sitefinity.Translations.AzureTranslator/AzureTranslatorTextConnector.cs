@@ -145,7 +145,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                 $"{Constants.AzureTransalteEndpointConstants.EndpointUrl}&{Constants.AzureTransalteEndpointConstants.SourceCultureQueryParam }={{0}}&{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam }={{1}}",
                 fromLanguageCode,
                 toLanguageCode);
-            if (IsSendingHtmlEnabled())
+            if (!IsRemoveHtmlTagsEnabled())
             {
 
                 uri += $"&{Constants.AzureTransalteEndpointConstants.TextTypeQueryParam}=html";
@@ -154,11 +154,10 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             return uri;
         }
 
-        protected virtual bool IsSendingHtmlEnabled()
+        protected virtual bool IsRemoveHtmlTagsEnabled()
         {
             var transaltionsConfig = Config.Get<TranslationsConfig>();
-            var isSendingHtml = !transaltionsConfig.Connectors.Values.First(x => x.Name == Constants.Name).RemoveHtmlTags;
-            return isSendingHtml;
+            return transaltionsConfig.Connectors.Values.First(x => x.Name == Constants.Name).RemoveHtmlTags;
         }
 
         private static string GetTranslаteArgumentExceptionMessage(string paramName)
