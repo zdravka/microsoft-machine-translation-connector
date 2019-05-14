@@ -48,7 +48,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException), "Expected empty input parameter to throw.")]
-        public void Translate_EmptyInput_Throws()
+        public void Translate_EmptyInputCollection_Throws()
         {
             this.sut.TranslateCallMock(new List<string>(), this.options);
         }
@@ -93,7 +93,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         }
 
         [TestMethod]
-        public void Translate_NullText_SendsEmptyTextForTransaltion()
+        public void Translate_NullTextInput_SendsEmptyTextForTransaltion()
         {
             // arrange
             string requestedTextForTranslation = null;
