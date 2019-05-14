@@ -23,6 +23,8 @@ You must **[Sign up for Azure Translator Text API V3](https://docs.microsoft.com
 Using one of the generated API keys after **[sign up for Azure Translator Text API](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/translator-text-how-to-signup)** service in Azure configure the following setting:
 *Administration >> Settings >> Advanced >> Translations >> Connectors >> Azure Translator Text Connector >> parameters >> apiKey*
 
+**Warning** Do not set the *RemoveHtmlTagsSetting* parameter to *True* as this is required for proper transaltion of content blocks.
+
 ## Supported languages
 
 You can check out the official [Azure language support documentation](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/language-support#translation). The connector uses the v3 API.
