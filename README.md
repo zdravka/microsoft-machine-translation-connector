@@ -21,7 +21,7 @@ You must **[Sign up for Azure Translator Text API V3](https://docs.microsoft.com
 ## Configure the connector
 
 Using one of the generated API keys after **[sign up for Azure Translator Text API](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/translator-text-how-to-signup)** service in Azure configure the following setting:
-*Administration >> Settings >> Advanced >> Translations >> Connectors >> Azure Translator Text Connector*
+*Administration >> Settings >> Advanced >> Translations >> Connectors >> Azure Translator Text Connector >> parameters >> apiKey*
 
 ## Supported languages
 
