@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Resources;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Web;
@@ -8,11 +9,11 @@ using Telerik.Sitefinity.Translations.AzureTranslator;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Telerik.Sitefinity.Translations.AzureTranslator")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Sitefinity CMS Translation Connector for Azure Translator Text services.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Progress Software Corporation")]
 [assembly: AssemblyProduct("Telerik.Sitefinity.Translations.AzureTranslator")]
-[assembly: AssemblyCopyright("Copyright ©  2019")]
+[assembly: AssemblyCopyright("Copyright © 2005-2019 Progress Software Corporation and/or one of its subsidiaries or affiliates. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -37,3 +38,5 @@ using Telerik.Sitefinity.Translations.AzureTranslator;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: InternalsVisibleTo("Telerik.Sitefinity.Translations.AzureTranslator.Tests")]
+[assembly: NeutralResourcesLanguage("en-US")]
+
