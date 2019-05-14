@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net.Http;
 using System.Threading;
@@ -8,12 +9,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 {
     internal class TestableAzureTranslatorTextConnector : AzureTranslatorTextConnector
     {
-        public HttpResponseMessage HttpResponseMessage { get; set; }
-
-        protected override HttpClient GetClient()
-        {
-            return new HttpClient(new MockedMessageHandler(this.HttpResponseMessage));
-        }
+        public Func<HttpRequestMessage, HttpResponseMessage> sendAsyncDelegate { get; set; }
 
         public void InitializeCallMock(NameValueCollection config)
         {
@@ -24,20 +20,35 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         {
             return base.Translate(input, translationOptions);
         }
+
+        protected override HttpClient GetClient()
+        {
+            return new HttpClient(new MockedMessageHandler(this.sendAsyncDelegate));
+        }
     }
 
     internal class MockedMessageHandler : HttpMessageHandler
     {
-        public MockedMessageHandler(HttpResponseMessage message)
+        public MockedMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> sendAsyncDelegate)
         {
-            this.Message = message;
+            this.sendAsyncDelegate = sendAsyncDelegate;
         }
-
-        public HttpResponseMessage Message { get; }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return Task.FromResult(this.Message);
+            if (this.sendAsyncDelegate != null)
+            {
+                return Task.FromResult(this.sendAsyncDelegate(request));
+            }
+            else
+            {
+                return Task.FromResult(new HttpResponseMessage()
+                {
+                    StatusCode = System.Net.HttpStatusCode.NotImplemented
+                });
+            }
         }
+
+        private readonly Func<HttpRequestMessage, HttpResponseMessage> sendAsyncDelegate;
     }
 }

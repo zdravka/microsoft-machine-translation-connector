@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net.Http;
+using System.Web.Script.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static Telerik.Sitefinity.Translations.AzureTranslator.AzureTranslatorTextConnector;
 
@@ -91,30 +92,56 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         }
 
         [TestMethod]
-        public void Translate_NullOrEmptyText_ReturnsEmptyText()
+        public void Translate_NullText_SendsEmptyTextForTransaltion()
         {
+            // arrange
+            string requestedTextForTranslation = null;
+            this.sut.sendAsyncDelegate = x =>
+            {
+                var requestText = x.Content.ReadAsStringAsync().Result;
+                var serializer = new JavaScriptSerializer();
+                dynamic result = serializer.DeserializeObject(requestText);
 
+                requestedTextForTranslation = result[0]["Text"];
+
+                return new HttpResponseMessage() { Content = new StringContent(@"
+[{""translations"" : [{""text"":""""}]}]
+") };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+            Assert.AreEqual(string.Empty, requestedTextForTranslation);
         }
 
         [TestMethod]
         public void Translate_SuccessfulTransaltionsRequest_ReturnsCollectionWithTranslation()
         {
+            // arrange
+            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Content = new StringContent(@"
+[{""translations"" : [{""text"":""result_text""}]}]
+")
+            };
 
+            // act
+            var result = this.sut.TranslateCallMock(new List<string>() { "stub_text" }, this.options);
+
+            // assert
+            Assert.AreEqual("result_text", result[0]);
         }
 
         [TestMethod]
         [ExpectedException(typeof(AzureTranslatorException), "Expected unsuccessful translation request to throw.")]
         public void Translate_UnsuccessfulTransaltions_Throws()
         {
-            var errorMessage = new object[]
-            {
-
-            };
-
-            this.sut.HttpResponseMessage = new HttpResponseMessage()
+            this.sut.sendAsyncDelegate = x => new HttpResponseMessage()
             {
                 StatusCode = System.Net.HttpStatusCode.InternalServerError,
-                //Content = 
+                Content = new StringContent(@"
+{""error"" : {""message"":""test_error_message""}}
+")
             };
 
             this.sut.TranslateCallMock(new List<string>() { "test" }, this.options);

@@ -39,21 +39,27 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
 
         protected override List<string> Translate(List<string> input, ITranslationOptions translationOptions)
         {
+            if (translationOptions == null)
+            {
+                throw new ArgumentException(GetTranslаteArgumentExceptionMessage(nameof(translationOptions)));
+            }
+
             var fromLanguageCode = translationOptions.SourceLanguage;
             var toLanguageCode = translationOptions.TargetLanguage;
+
             if (string.IsNullOrWhiteSpace(fromLanguageCode))
             {
-                throw new ArgumentException(GetTranslаteArgumentExceptionMessage($"{nameof(translationOptions)}.{nameof(translationOptions.SourceLanguage)}", translationOptions.SourceLanguage.GetType()));
+                throw new ArgumentException(GetTranslаteArgumentExceptionMessage($"{nameof(translationOptions)}.{nameof(translationOptions.SourceLanguage)}"));
             }
 
             if (string.IsNullOrWhiteSpace(toLanguageCode))
             {
-                throw new ArgumentException(GetTranslаteArgumentExceptionMessage($"{nameof(translationOptions)}.{nameof(translationOptions.TargetLanguage)}", translationOptions.SourceLanguage.GetType()));
+                throw new ArgumentException(GetTranslаteArgumentExceptionMessage($"{nameof(translationOptions)}.{nameof(translationOptions.TargetLanguage)}"));
             }
 
             if (input == null || input.Count == 0)
             {
-                throw new ArgumentException(GetTranslаteArgumentExceptionMessage(nameof(input), input.GetType()));
+                throw new ArgumentException(GetTranslаteArgumentExceptionMessage(nameof(input)));
             }
 
             if (fromLanguageCode == toLanguageCode)
@@ -66,7 +72,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             var body = new List<object>();
             foreach (var text in input)
             {
-                body.Add(new { Text = text });
+                body.Add(new { Text = text ?? string.Empty });
             }
 
             var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
@@ -103,9 +109,9 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             }
         }
 
-        private static string GetTranslаteArgumentExceptionMessage(string paramName, Type paramType)
+        private static string GetTranslаteArgumentExceptionMessage(string paramName)
         {
-            return string.Format(Constants.InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate, paramName, paramType);
+            return string.Format(Constants.InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate, paramName);
         }
 
         private void HandleApiError(string responseBody)
@@ -126,11 +132,11 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             internal const string InvalidApiKeyExceptionMessage = "Invalid API subscription keys.";
             internal const string NoApiKeyExceptionMessage = "No API key configured for azure translations connector.";
             internal const string InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix = "Invalid parameter for azure translation request.";
-            internal const string InvalidParameterExceptionMessageTemplate = "Parameter with name {0} of type {1} cannot be null or empty.";
+            internal const string NullOrEmptyParameterExceptionMessageTemplate = "Parameter with name {0} cannot be null or empty.";
             internal const string Title = "Azure Translator Text Connector";
             internal const string TEXT_TRANSLATION_API_ENDPOINT = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0";
             internal const int ValidApiKeyLength = 32;
-            internal static readonly string InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate = InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix + " " + InvalidParameterExceptionMessageTemplate;
+            internal static readonly string InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate = InvalidParameterForAzureTransaltionRequestExceptionMessagePrefix + " " + NullOrEmptyParameterExceptionMessageTemplate;
         }
 
         internal struct Parameters
