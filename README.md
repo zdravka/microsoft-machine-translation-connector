@@ -16,7 +16,7 @@ For more information, see the [System requirements](https://docs.sitefinity.com/
 
 ### Azure
 
-You must **[Sign up for Azure Translator Text API V3](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/translator-text-how-to-signup)** service in Azure. Then you can use one of the generated API Keys there to configure the connector in Sitefinity. You can use the free tier as well.
+You must **[Sign up for Azure Translator Text API V3](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/translator-text-how-to-signup)** service in Azure. Then you can use one of the generated API Keys there to configure the connector in Sitefinity. You can use the free tier as well. It supports up to 2 million characters per month for free with no automatic billing afterwards.
 
 ## Configure the connector
 
