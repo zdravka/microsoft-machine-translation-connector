@@ -142,7 +142,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         private string GetAzureTranslateEndpointUri(string fromLanguageCode, string toLanguageCode)
         {
             string uri = string.Format(
-                $"{Constants.AzureTransalteEndpointConstants.EndpointUrl}&{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam }={{0}}&{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam }={{1}}",
+                $"{Constants.AzureTransalteEndpointConstants.EndpointUrl}&{Constants.AzureTransalteEndpointConstants.SourceCultureQueryParam }={{0}}&{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam }={{1}}",
                 fromLanguageCode,
                 toLanguageCode);
             if (IsSendingHtmlEnabled())

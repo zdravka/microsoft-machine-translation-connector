@@ -251,7 +251,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
 
             this.sut.TranslateCallMock(new List<string>() { null }, this.options);
             var bgExpectValue = $"{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam}=BG";
-            var czExpectValue = $"{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam}=CZ";
+            var czExpectValue = $"{Constants.AzureTransalteEndpointConstants.SourceCultureQueryParam}=CZ";
             Assert.IsTrue(reqeustQueryString.Contains(bgExpectValue), $"Expected {reqeustQueryString} to contain {bgExpectValue}");
             Assert.IsTrue(reqeustQueryString.Contains(czExpectValue), $"Expected {reqeustQueryString} to contain {czExpectValue}");
         }
