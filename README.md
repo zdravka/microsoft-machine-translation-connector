@@ -11,7 +11,7 @@ This repo contains a translation connector to work with the **[Azure Translator 
 
 ### Sitefinity
 
-For more information, see the [System requirements](https://docs.sitefinity.com/system-requirements) and [Transaltion procedure](https://www.progress.com/documentation/sitefinity-cms/translation-procedure) for the  respective Sitefinity CMS version.
+For more information, see the [System requirements](https://docs.sitefinity.com/system-requirements) and [Translation procedure](https://www.progress.com/documentation/sitefinity-cms/translation-procedure) for the  respective Sitefinity CMS version.
 
 ### Azure
 
@@ -22,7 +22,7 @@ You must **[Sign up for Azure Translator Text API V3](https://docs.microsoft.com
 Using one of the generated API keys after **[sign up for Azure Translator Text API](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/translator-text-how-to-signup)** service in Azure configure the following setting:
 *Administration >> Settings >> Advanced >> Translations >> Connectors >> Azure Translator Text Connector >> parameters >> apiKey*
 
-**Warning** For proper transaltion of whole paragraphs of text, **do NOT** set the *Strip HTML tags* parameter to *True* (under *Administration >> Settings >> Advanced >> Translations >> Connectors >> Azure Translator Text Connector*).
+**Warning** For proper translation of whole paragraphs of text, **do NOT** set the *Strip HTML tags* parameter to *True* (under *Administration >> Settings >> Advanced >> Translations >> Connectors >> Azure Translator Text Connector*).
 
 ## Supported languages
 
