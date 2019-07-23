@@ -5,22 +5,22 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
+using Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector;
+using Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Exceptions;
 using Telerik.Sitefinity.Translations;
-using Telerik.Sitefinity.Translations.AzureTranslator;
-using Telerik.Sitefinity.Translations.AzureTranslator.Exceptions;
 
 [assembly: TranslationConnector(name: Constants.Name,
-                                connectorType: typeof(AzureTranslatorTextConnector),
+                                connectorType: typeof(MicrosoftMachineTranslatorConnector),
                                 title: Constants.Title,
-                                enabled: true,
+                                enabled: false,
                                 removeHtmlTags: false, 
                                 parameters: new string[] { Constants.ConfigParameters.ApiKey })]
-namespace Telerik.Sitefinity.Translations.AzureTranslator
+namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 {
     /// <summary>
-    /// Client for Azure Transaltor Text Service API
+    /// Connector for Microsoft Transaltor Text Service API
     /// </summary>
-    public class AzureTranslatorTextConnector : MachineTranslationConnector
+    public class MicrosoftMachineTranslatorConnector : MachineTranslationConnector
     {
         protected virtual HttpClient GetClient()
         {
@@ -115,7 +115,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                 {
                     if (IsSerializationException(ex))
                     {
-                        throw new AzureTranslatorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingResponseFromServer} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                        throw new MicrosoftTranslatorConnectorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingResponseFromServer} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                     }
 
                     throw;
@@ -135,7 +135,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
                 {
                     if (ex is KeyNotFoundException || ex is NullReferenceException)
                     {
-                        throw new AzureTranslatorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                        throw new MicrosoftTranslatorConnectorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                     }
 
                     throw;
@@ -148,13 +148,13 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
         private string GetAzureTranslateEndpointUri(string fromLanguageCode, string toLanguageCode)
         {
             string uri = string.Format(
-                $"{Constants.AzureTransalteEndpointConstants.EndpointUrl}&{Constants.AzureTransalteEndpointConstants.SourceCultureQueryParam }={{0}}&{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam }={{1}}",
+                $"{Constants.MicrosoftTranslatorEndpointConstants.EndpointUrl}&{Constants.MicrosoftTranslatorEndpointConstants.SourceCultureQueryParam }={{0}}&{Constants.MicrosoftTranslatorEndpointConstants.TargetCultureQueryParam }={{1}}",
                 fromLanguageCode,
                 toLanguageCode);
             if (!IsRemoveHtmlTagsEnabled())
             {
 
-                uri += $"&{Constants.AzureTransalteEndpointConstants.TextTypeQueryParam}=html";
+                uri += $"&{Constants.MicrosoftTranslatorEndpointConstants.TextTypeQueryParam}=html";
             }
 
             return uri;
@@ -167,7 +167,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
 
         private static string GetTranslаteArgumentExceptionMessage(string paramName)
         {
-            return string.Format(Constants.ExceptionMessages.InvalidParameterForAzureTransaltionRequestExceptionMessageTemplate, paramName);
+            return string.Format(Constants.ExceptionMessages.InvalidParameterForMicrosoftTransaltionRequestExceptionMessageTemplate, paramName);
         }
 
         private void HandleApiError(string responseBody, HttpResponseMessage response)
@@ -182,7 +182,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
             {
                 if (IsSerializationException(ex))
                 {
-                    throw new AzureTranslatorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingErrorResponseFromServer} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                    throw new MicrosoftTranslatorConnectorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingErrorResponseFromServer} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                 }
 
                 throw;
@@ -190,13 +190,13 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator
 
             try
             {
-                throw new AzureTranslatorException(jsonResponse["error"]["message"]);
+                throw new MicrosoftTranslatorConnectorException(jsonResponse["error"]["message"]);
             }
             catch (Exception ex)
             {
                 if (ex is KeyNotFoundException || ex is NullReferenceException)
                 {
-                    throw new AzureTranslatorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedErrorResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
+                    throw new MicrosoftTranslatorConnectorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedErrorResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                 }
 
                 throw;

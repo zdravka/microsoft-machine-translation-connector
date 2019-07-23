@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Telerik.Sitefinity.Translations.AzureTranslator", "Telerik.Sitefinity.Translations.AzureTranslator\Telerik.Sitefinity.Translations.AzureTranslator.csproj", "{9DD4E13B-0222-4A3F-9FA1-7EDFF084A45A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector", "Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector\Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.csproj", "{9DD4E13B-0222-4A3F-9FA1-7EDFF084A45A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Telerik.Sitefinity.Translations.AzureTranslator.Tests", "AzureTranslator.Tests\Telerik.Sitefinity.Translations.AzureTranslator.Tests\Telerik.Sitefinity.Translations.AzureTranslator.Tests.csproj", "{39DBA353-CC7D-4D9D-A906-A1F386EAA6E4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Telerik.Sitefinity.Translations.AzureTranslator.IntegrationTests", "Telerik.Sitefinity.Translations.AzureTranslator.IntegrationTests\Telerik.Sitefinity.Translations.AzureTranslator.IntegrationTests.csproj", "{C7FFC631-2BBF-453F-B797-658D9AFA3623}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Tests", "Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Tests\Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Tests.csproj", "{39DBA353-CC7D-4D9D-A906-A1F386EAA6E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +21,6 @@ Global
 		{39DBA353-CC7D-4D9D-A906-A1F386EAA6E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39DBA353-CC7D-4D9D-A906-A1F386EAA6E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39DBA353-CC7D-4D9D-A906-A1F386EAA6E4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C7FFC631-2BBF-453F-B797-658D9AFA3623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C7FFC631-2BBF-453F-B797-658D9AFA3623}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C7FFC631-2BBF-453F-B797-658D9AFA3623}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C7FFC631-2BBF-453F-B797-658D9AFA3623}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

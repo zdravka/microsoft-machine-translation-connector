@@ -4,16 +4,15 @@ using System.Collections.Specialized;
 using System.Net.Http;
 using System.Web.Script.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Telerik.Sitefinity.Translations.AzureTranslator.Exceptions;
-using static Telerik.Sitefinity.Translations.AzureTranslator.AzureTranslatorTextConnector;
+using Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Exceptions;
 
-namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
+namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Tests
 {
     [TestClass]
     [TestCategory("Unit Tests")]
-    public class AzureTranslatorTextConnectorTests
+    public class MicrosoftMachineTranslatorConnectorTests
     {
-        private TestableAzureTranslatorTextConnector sut;
+        private TestableMicrosoftMachineTranslatorConnector sut;
         private MockedTranslationOptions options;
         private const string SuccessfulTranslationResponseTemplate = "[{{\"translations\" : [{{\"text\":\"{0}\"}}]}}]";
         private readonly string GenericTranslatedText = "translated_text";
@@ -22,7 +21,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         [TestInitialize]
         public void TestInit()
         {
-            this.sut = new TestableAzureTranslatorTextConnector();
+            this.sut = new TestableMicrosoftMachineTranslatorConnector();
             this.options = new MockedTranslationOptions() { SourceLanguage = "en", TargetLanguage = "bg" };
         }
 
@@ -134,7 +133,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(AzureTranslatorException), "Expected unsuccessful translation request to throw.")]
+        [ExpectedException(typeof(MicrosoftTranslatorConnectorException), "Expected unsuccessful translation request to throw.")]
         public void Translate_UnsuccessfulTransaltions_Throws()
         {
             this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
@@ -149,7 +148,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(AzureTranslatorResponseFormatException), "Expected unexpected successful response format to throw.")]
+        [ExpectedException(typeof(MicrosoftTranslatorConnectorResponseFormatException), "Expected unexpected successful response format to throw.")]
         public void Translate_UnexpectedResponseFormat_Throws()
         {
             // arrange
@@ -169,7 +168,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(AzureTranslatorResponseFormatException), "Expected unexpected error response format to throw.")]
+        [ExpectedException(typeof(MicrosoftTranslatorConnectorResponseFormatException), "Expected unexpected error response format to throw.")]
         public void Translate_UnexpectedErrorFormat_Throws()
         {
             this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
@@ -184,7 +183,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(AzureTranslatorSerializationException), "Expected error response wrong json format to throw.")]
+        [ExpectedException(typeof(MicrosoftTranslatorConnectorSerializationException), "Expected error response wrong json format to throw.")]
         public void Translate_ErrorResponseBrokenJson_Throws()
         {
             this.sut.mockedHttpClientSendAsyncDelegate = x => new HttpResponseMessage()
@@ -199,7 +198,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(AzureTranslatorSerializationException), "Expected successful response wrong json format to throw.")]
+        [ExpectedException(typeof(MicrosoftTranslatorConnectorSerializationException), "Expected successful response wrong json format to throw.")]
         public void Translate_ResponseWrongJsonFormat_Throws()
         {
             // arrange
@@ -232,7 +231,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
             };
 
             this.sut.TranslateCallMock(new List<string>() { null }, this.options);
-            var expected = $"{Constants.AzureTransalteEndpointConstants.TextTypeQueryParam}=html";
+            var expected = $"{Constants.MicrosoftTranslatorEndpointConstants.TextTypeQueryParam}=html";
             Assert.IsTrue(reqeustQueryString.Contains(expected), $"Expected {reqeustQueryString} to contain {expected}");
         }
 
@@ -250,7 +249,7 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
             };
 
             this.sut.TranslateCallMock(new List<string>() { null }, this.options);
-            var expected = $"{Constants.AzureTransalteEndpointConstants.TextTypeQueryParam}=html";
+            var expected = $"{Constants.MicrosoftTranslatorEndpointConstants.TextTypeQueryParam}=html";
             Assert.IsFalse(reqeustQueryString.Contains(expected), $"Expected {reqeustQueryString} to not contain {expected}");
         }
 
@@ -269,8 +268,8 @@ namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
             };
 
             this.sut.TranslateCallMock(new List<string>() { null }, this.options);
-            var bgExpectValue = $"{Constants.AzureTransalteEndpointConstants.TargetCultureQueryParam}=BG";
-            var czExpectValue = $"{Constants.AzureTransalteEndpointConstants.SourceCultureQueryParam}=CZ";
+            var bgExpectValue = $"{Constants.MicrosoftTranslatorEndpointConstants.TargetCultureQueryParam}=BG";
+            var czExpectValue = $"{Constants.MicrosoftTranslatorEndpointConstants.SourceCultureQueryParam}=CZ";
             Assert.IsTrue(reqeustQueryString.Contains(bgExpectValue), $"Expected {reqeustQueryString} to contain {bgExpectValue}");
             Assert.IsTrue(reqeustQueryString.Contains(czExpectValue), $"Expected {reqeustQueryString} to contain {czExpectValue}");
         }

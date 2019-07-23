@@ -2,17 +2,15 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Web;
-using Telerik.Sitefinity.Translations.AzureTranslator;
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Telerik.Sitefinity.Translations.AzureTranslator")]
-[assembly: AssemblyDescription("Sitefinity CMS Translation Connector for Azure Translator Text services.")]
+[assembly: AssemblyTitle("Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector")]
+[assembly: AssemblyDescription("Sitefinity CMS Machine Translation Connector for Microsoft Translator Text services.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Progress Software Corporation")]
-[assembly: AssemblyProduct("Telerik.Sitefinity.Translations.AzureTranslator")]
+[assembly: AssemblyProduct("Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector")]
 [assembly: AssemblyCopyright("Copyright © 2005-2019 Progress Software Corporation and/or one of its subsidiaries or affiliates. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -37,6 +35,6 @@ using Telerik.Sitefinity.Translations.AzureTranslator;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: InternalsVisibleTo("Telerik.Sitefinity.Translations.AzureTranslator.Tests")]
+[assembly: InternalsVisibleTo("Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Tests")]
 [assembly: NeutralResourcesLanguage("en-US")]
 

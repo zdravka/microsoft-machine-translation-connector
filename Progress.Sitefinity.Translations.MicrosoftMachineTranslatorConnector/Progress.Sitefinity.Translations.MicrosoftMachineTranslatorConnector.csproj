@@ -7,9 +7,9 @@
     <ProjectGuid>{9DD4E13B-0222-4A3F-9FA1-7EDFF084A45A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Telerik.Sitefinity.Translations.AzureTranslator</RootNamespace>
-    <AssemblyName>Telerik.Sitefinity.Translations.AzureTranslator</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <RootNamespace>Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector</RootNamespace>
+    <AssemblyName>Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
@@ -43,14 +43,14 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="Telerik.Sitefinity.Translations, Version=12.1.7100.0, Culture=neutral, PublicKeyToken=b28c218413bdf563, processorArchitecture=MSIL">
-      <HintPath>..\packages\Telerik.Sitefinity.Translations.12.1.7100\lib\net48\Telerik.Sitefinity.Translations.dll</HintPath>
+      <HintPath>..\packages\Telerik.Sitefinity.Translations.12.1.7100\lib\net472\Telerik.Sitefinity.Translations.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Exceptions\AzureTranslatorException.cs" />
-    <Compile Include="Exceptions\AzureTranslatorResponseFormatException.cs" />
-    <Compile Include="Exceptions\AzureTranslatorSerializationException.cs" />
-    <Compile Include="AzureTranslatorTextConnector.cs" />
+    <Compile Include="Exceptions\MicrosoftTranslatorConnectorException.cs" />
+    <Compile Include="Exceptions\MicrosoftTranslatorConnectorResponseFormatException.cs" />
+    <Compile Include="Exceptions\MicrosoftTranslatorConnectorSerializationException.cs" />
+    <Compile Include="MicrosoftMachineTranslatorConnector.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

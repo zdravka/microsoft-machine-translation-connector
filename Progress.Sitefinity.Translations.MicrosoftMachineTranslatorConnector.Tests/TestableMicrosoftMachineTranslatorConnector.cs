@@ -4,10 +4,11 @@ using System.Collections.Specialized;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Telerik.Sitefinity.Translations;
 
-namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
+namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Tests
 {
-    internal class TestableAzureTranslatorTextConnector : AzureTranslatorTextConnector
+    internal class TestableMicrosoftMachineTranslatorConnector : MicrosoftMachineTranslatorConnector
     {
         public Func<HttpRequestMessage, HttpResponseMessage> mockedHttpClientSendAsyncDelegate { get; set; }
         public bool MockedIsRemoveHtmlTagsEnabled { get; set; }

@@ -1,4 +1,6 @@
-﻿namespace Telerik.Sitefinity.Translations.AzureTranslator.Tests
+﻿using Telerik.Sitefinity.Translations;
+
+namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Tests
 {
     internal class MockedTranslationOptions : ITranslationOptions
     {
