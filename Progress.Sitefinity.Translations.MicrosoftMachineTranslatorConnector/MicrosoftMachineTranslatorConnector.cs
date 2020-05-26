@@ -13,8 +13,10 @@ using Telerik.Sitefinity.Translations;
                                 connectorType: typeof(MicrosoftMachineTranslatorConnector),
                                 title: Constants.Title,
                                 enabled: false,
-                                removeHtmlTags: false, 
-                                parameters: new string[] { Constants.ConfigParameters.ApiKey })]
+                                removeHtmlTags: false,
+                                parameters: new string[] { Constants.ConfigParameters.ApiKey,
+									Constants.ConfigParameters.Region,
+									Constants.ConfigParameters.BaseUrl})]
 namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 {
     /// <summary>
@@ -45,7 +47,18 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             }
 
             this.key = key;
-        }
+
+			var region = config.Get(Constants.ConfigParameters.Region);
+			this.region = region;
+
+			var baseURL = config.Get(Constants.ConfigParameters.BaseUrl);
+			if (string.IsNullOrEmpty(baseURL))
+			{
+				throw new ArgumentException(Constants.ExceptionMessages.NoBaseURLExceptionMessage);
+			}
+
+			this.baseUrl = baseURL;
+		}
 
         protected override List<string> Translate(List<string> input, ITranslationOptions translationOptions)
         {
@@ -95,6 +108,10 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 request.RequestUri = new Uri(uri);
                 request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
                 request.Headers.Add("Ocp-Apim-Subscription-Key", this.key);
+				if (!string.IsNullOrWhiteSpace(this.region))
+				{
+					request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
+				}
                 request.Headers.Add("X-ClientTraceId", Guid.NewGuid().ToString());
 
                 var response = client.SendAsync(request).Result;
@@ -148,7 +165,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
         private string GetAzureTranslateEndpointUri(string fromLanguageCode, string toLanguageCode)
         {
             string uri = string.Format(
-                $"{Constants.MicrosoftTranslatorEndpointConstants.EndpointUrl}&{Constants.MicrosoftTranslatorEndpointConstants.SourceCultureQueryParam }={{0}}&{Constants.MicrosoftTranslatorEndpointConstants.TargetCultureQueryParam }={{1}}",
+                $"{this.baseUrl}{Constants.MicrosoftTranslatorEndpointConstants.TranslatorPathAndVersion}&{Constants.MicrosoftTranslatorEndpointConstants.SourceCultureQueryParam }={{0}}&{Constants.MicrosoftTranslatorEndpointConstants.TargetCultureQueryParam }={{1}}",
                 fromLanguageCode,
                 toLanguageCode);
             if (!IsRemoveHtmlTagsEnabled())
@@ -161,7 +178,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
         }
 
         protected virtual bool IsRemoveHtmlTagsEnabled()
-        {            
+        {
             return this.RemoveHtmlTags;
         }
 
@@ -209,6 +226,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
         }
 
         private string key;
-
+		private string region;
+		private string baseUrl;
     }
 }
