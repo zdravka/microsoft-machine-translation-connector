@@ -54,8 +54,8 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 			var baseURL = config.Get(Constants.ConfigParameters.BaseUrl);
 			if (string.IsNullOrEmpty(baseURL))
 			{
-				throw new ArgumentException(Constants.ExceptionMessages.NoBaseURLExceptionMessage);
-			}
+                baseURL = Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl;
+            }
 
 			this.baseUrl = baseURL;
 		}
