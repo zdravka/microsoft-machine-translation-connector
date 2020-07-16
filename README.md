@@ -34,9 +34,14 @@ Using one of the generated API keys, configure the connector in the following wa
 3. Set the _apiKey_ parameter to the API key provided by Microsoft Azure.
 4. Set the _region_ parameter to one of the regions, supported by Microsoft Azure API.  
  For more information, see _Microsoft Azure documentation >> Authenticate requests to Azure Cognitive Services >>_ [Supported regions](https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#supported-regions).
-5. Set the _baseURL_ to one of the URL’s supported by Microsoft Azure API.  
+4. Set the _baseURL_ to one of the URL’s supported by Microsoft Azure API.  
  For more information, see _Microsoft Azure documentation >> Translator v3.0 >>_ [Base URL's](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/reference/v3-0-reference#base-urls).  
-   >**IMPORTANT**: The Azure geography of the URL must include the region that you have configured.   
+ If you do not set the baseURL parameter, the system takes the _Global (non-regional)_ base URL.
+5. Set the _region_ parameter to one of the regions, supported by Microsoft Azure API.  
+ If you have not changed the _baseURL_ parameter from the default one, you do not need to configure the _region_ parameter.  
+ For more information, see _Microsoft Azure documentation >> Authenticate requests to Azure Cognitive Services >>_ [Supported regions](https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#supported-regions).  
+ 
+   >**IMPORTANT**: The _Azure geography_ of the base URL must include the region that you have configured.
 6. Navigate back to _MicrosoftMachineTranslatorConnector_.
 7. Select _Enabled_ and deselect _Strip HTML tags_.
 8. Save your changes.
