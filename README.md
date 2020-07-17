@@ -32,8 +32,6 @@ Using one of the generated API keys, configure the connector in the following wa
 1. In Sitefinity CMS backend, navigate to _Administration >> Settings >> Advanced_.
 2. In the treeview on the right, expand _Translations >> Connectors >> MicrosoftMachineTranslatorConnector >> parameters_.
 3. Set the _apiKey_ parameter to the API key provided by Microsoft Azure.
-4. Set the _region_ parameter to one of the regions, supported by Microsoft Azure API.  
- For more information, see _Microsoft Azure documentation >> Authenticate requests to Azure Cognitive Services >>_ [Supported regions](https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#supported-regions).
 4. Set the _baseURL_ to one of the URL’s supported by Microsoft Azure API.  
  For more information, see _Microsoft Azure documentation >> Translator v3.0 >>_ [Base URL's](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/reference/v3-0-reference#base-urls).  
  If you do not set the baseURL parameter, the system takes the _Global (non-regional)_ base URL.
