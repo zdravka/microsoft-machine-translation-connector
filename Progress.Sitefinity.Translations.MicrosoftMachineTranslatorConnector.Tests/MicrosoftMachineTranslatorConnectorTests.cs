@@ -15,6 +15,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
         private TestableMicrosoftMachineTranslatorConnector sut;
         private MockedTranslationOptions options;
         private const string SuccessfulTranslationResponseTemplate = "[{{\"translations\" : [{{\"text\":\"{0}\"}}]}}]";
+        private const string SuccessfulBreakSentenceTemplate = "[{{\"sentLen\": [{0}]}}]";
         private readonly string GenericTranslatedText = "translated_text";
         private string GenericSuccessfulTranslationResponse => string.Format(SuccessfulTranslationResponseTemplate, GenericTranslatedText);
 
@@ -127,6 +128,38 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
 
             // act
             var result = this.sut.TranslateCallMock(new List<string>() { "stub_text" }, this.options);
+
+            // assert
+            Assert.AreEqual(GenericTranslatedText, result[0]);
+        }
+
+        [TestMethod]
+        public void Translate_SuccessfulTransaltionsVLargeRequestRequest_ReturnsCollectionWithTranslation()
+        {
+            // arrange
+            int textLength = MicrosoftMachineTranslatorConnector.MaxTranslateRequestSize * 2;
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                if (x.RequestUri.PathAndQuery.Contains("breaksentence"))
+                {
+                    return new HttpResponseMessage()
+                    {
+                        StatusCode = System.Net.HttpStatusCode.OK,
+                        Content = new StringContent(string.Format(SuccessfulBreakSentenceTemplate, textLength - 1))
+                    };
+                }
+                else
+                {
+                    return new HttpResponseMessage()
+                    {
+                        StatusCode = System.Net.HttpStatusCode.OK,
+                        Content = new StringContent(GenericSuccessfulTranslationResponse)
+                    };
+                }
+            };
+
+            // act
+            var result = this.sut.TranslateCallMock(new List<string>() { new String('L', textLength) }, this.options);
 
             // assert
             Assert.AreEqual(GenericTranslatedText, result[0]);
