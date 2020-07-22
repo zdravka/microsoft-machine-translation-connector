@@ -79,6 +79,8 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             }
 
             bool translateindividually = false;
+
+            // Because the connector does not removeHtmlTags is set to false, we expect to have only 1 input
             foreach (string text in input)
             {
                 if (!string.IsNullOrWhiteSpace(text) && text.Length >= MaxTranslateRequestSize) translateindividually = true;
@@ -89,13 +91,19 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 foreach (string text in input)
                 {
                     List<string> splitstring = SplitString(text, fromLanguageCode);
-                    string linetranslation = string.Empty;
+                    var linetranslation = new StringBuilder();
                     foreach (string innertext in splitstring)
                     {
+                        var hasTrailingWhiteSpace = innertext.EndsWith(" ");
                         var innertranslation = TranslateCore(new List<string> { innertext }, translationOptions);
-                        linetranslation += string.Join(" ", innertranslation);
+                        linetranslation.Append(innertranslation[0]);
+                        // The translator trims whitespaces by default, so add space if it was there before
+                        if (hasTrailingWhiteSpace)
+                        {
+                            linetranslation.Append(" ");
+                        }
                     }
-                    resultlist.Add(linetranslation);
+                    resultlist.Add(linetranslation.ToString());
                 }
                 return resultlist.ToList();
             }

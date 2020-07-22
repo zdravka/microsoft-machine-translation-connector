@@ -138,15 +138,19 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
         {
             // arrange
             int textLength = MicrosoftMachineTranslatorConnector.MaxTranslateRequestSize * 2;
+            var requestCount = 0;
             this.sut.mockedHttpClientSendAsyncDelegate = x =>
             {
                 if (x.RequestUri.PathAndQuery.Contains("breaksentence"))
                 {
-                    return new HttpResponseMessage()
+                    var response = new HttpResponseMessage()
                     {
                         StatusCode = System.Net.HttpStatusCode.OK,
-                        Content = new StringContent(string.Format(SuccessfulBreakSentenceTemplate, textLength - 1))
+                        // First call we send 5000 chars, we take the first 4000. Second call is the same. For the last call we sned only the last 2000 chars.
+                        Content = new StringContent(string.Format(SuccessfulBreakSentenceTemplate, requestCount < 2 ? "4000, 1000" : "2000"))
                     };
+                    requestCount++;
+                    return response;
                 }
                 else
                 {
@@ -159,10 +163,11 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
             };
 
             // act
-            var result = this.sut.TranslateCallMock(new List<string>() { new String('L', textLength) }, this.options);
+            var result = this.sut.TranslateCallMock(new List<string>() { new string('L', textLength) }, this.options);
 
             // assert
-            Assert.AreEqual(GenericTranslatedText, result[0]);
+            var expectedString = string.Concat(GenericTranslatedText, GenericTranslatedText, GenericTranslatedText);
+            Assert.AreEqual(expectedString, result[0]);
         }
 
         [TestMethod]
