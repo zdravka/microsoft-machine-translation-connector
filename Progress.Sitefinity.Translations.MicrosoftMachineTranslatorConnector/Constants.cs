@@ -10,7 +10,7 @@
         {
             public const string InvalidApiKeyExceptionMessage = "Invalid API subscription key.";
             public const string NoApiKeyExceptionMessage = "No API key configured for machine translation connector for Microsoft Translator.";
-            public const string InvalidParameterForMicrosoftTransaltionRequestExceptionMessagePrefix = "Invalid parameter for Microsoft Translator request.";
+			public const string InvalidParameterForMicrosoftTransaltionRequestExceptionMessagePrefix = "Invalid parameter for Microsoft Translator request.";
             public const string NullOrEmptyParameterExceptionMessageTemplate = "Parameter with name {0} cannot be null or empty.";
             public static readonly string InvalidParameterForMicrosoftTransaltionRequestExceptionMessageTemplate = InvalidParameterForMicrosoftTransaltionRequestExceptionMessagePrefix + " " + NullOrEmptyParameterExceptionMessageTemplate;
 
@@ -24,7 +24,9 @@
 
         internal struct ConfigParameters
         {
+			public const string BaseUrl = "baseURL";
             public const string ApiKey = "apiKey";
+			public const string Region = "region";
         }
 
         internal struct MicrosoftTranslatorEndpointConstants

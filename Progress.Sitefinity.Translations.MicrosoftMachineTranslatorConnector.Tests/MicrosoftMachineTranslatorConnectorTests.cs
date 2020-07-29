@@ -24,6 +24,11 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
         {
             this.sut = new TestableMicrosoftMachineTranslatorConnector();
             this.options = new MockedTranslationOptions() { SourceLanguage = "en", TargetLanguage = "bg" };
+
+            var testConfig = new NameValueCollection();
+            testConfig.Add(Constants.ConfigParameters.BaseUrl, Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl);
+            testConfig.Add(Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength));
+            this.sut.InitializeCallMock(testConfig);
         }
 
         [TestMethod]
