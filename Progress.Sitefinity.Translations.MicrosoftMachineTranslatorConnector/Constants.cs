@@ -32,7 +32,7 @@
         internal struct MicrosoftTranslatorEndpointConstants
         {
             public const string DefaultEndpointUrl = "https://api.cognitive.microsofttranslator.com";
-            public const string EndpointUrl = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0";
+            public const string TranslatorPathAndVersion = "/translate?api-version=3.0";
             public const string TextTypeQueryParam = "textType";
             public const string TargetCultureQueryParam = "to";
             public const string SourceCultureQueryParam = "from";
