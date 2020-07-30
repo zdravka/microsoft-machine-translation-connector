@@ -1,4 +1,17 @@
-﻿using System;
+﻿/**
+Uses code from Microsoft-Document-Translator
+https://github.com/MicrosoftTranslator/DocumentTranslator 
+licensed under MIT license
+https://github.com/MicrosoftTranslator/DocumentTranslator/blob/master/LICENSE.md
+
+Microsoft-Document-Translator
+
+Copyright (c) Microsoft Corporation
+
+All rights reserved.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -9,6 +22,7 @@ using Newtonsoft.Json;
 using Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector;
 using Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Exceptions;
 using Telerik.Sitefinity.Translations;
+
 
 [assembly: TranslationConnector(name: Constants.Name,
                                 connectorType: typeof(MicrosoftMachineTranslatorConnector),
@@ -181,14 +195,12 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 request.Headers.Add("X-ClientTraceId", Guid.NewGuid().ToString());
 
                 var response = new HttpResponseMessage();
-                var responseTask = client.SendAsync(request);
-                var responseContinuation = responseTask.ContinueWith(r => response = r.Result);
-                responseContinuation.Wait();
+                var responseTask = client.SendAsync(request).ContinueWith(r => response = r.Result);
+                responseTask.Wait();
 
                 var responseBody = string.Empty;
-                var responseBodyTask = response.Content.ReadAsStringAsync();
-                var responseBodyContinuation = responseBodyTask.ContinueWith(r => responseBody = r.Result);
-                responseBodyContinuation.Wait();
+                var responseBodyTask = response.Content.ReadAsStringAsync().ContinueWith(r => responseBody = r.Result);
+                responseBodyTask.Wait();
 
                 if (!response.IsSuccessStatusCode)
                 {
