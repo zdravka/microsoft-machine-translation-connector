@@ -370,7 +370,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             if (String.IsNullOrEmpty(text) || String.IsNullOrWhiteSpace(text)) return null;
             string path = "/breaksentence?api-version=3.0";
             string params_ = "&language=" + languagecode;
-            string uri = Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl + path + params_;
+            string uri = this.baseUrl + path + params_;
             object[] body = new object[] { new { Text = text.Substring(0, (text.Length < MaxTranslateRequestSize) ? text.Length : MaxTranslateRequestSize) } };
             string requestBody = JsonConvert.SerializeObject(body);
             List<int> resultList = new List<int>();
@@ -382,9 +382,24 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 request.RequestUri = new Uri(uri);
                 request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
                 request.Headers.Add("Ocp-Apim-Subscription-Key", this.key);
+                if (!string.IsNullOrWhiteSpace(this.region))
+                {
+                    request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
+                }
 
-                var response = client.SendAsync(request).Result;
-                string result = response.Content.ReadAsStringAsync().Result;
+                var response = new HttpResponseMessage();
+                var responseTask = client.SendAsync(request).ContinueWith(r => response = r.Result);
+                responseTask.Wait();
+
+                var result = string.Empty;
+                var resultTask = response.Content.ReadAsStringAsync().ContinueWith(r => result = r.Result);
+                resultTask.Wait();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    this.HandleApiError(result, response);
+                }
+
                 BreakSentenceResult[] deserializedOutput = JsonConvert.DeserializeObject<BreakSentenceResult[]>(result);
                 foreach (BreakSentenceResult o in deserializedOutput)
                 {
