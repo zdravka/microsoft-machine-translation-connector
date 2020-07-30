@@ -5,6 +5,7 @@
         public const string Name = "MicrosoftMachineTranslatorConnector";
         public const string Title = "Machine translation connector for Microsoft Translator";
         public const int ValidApiKeyLength = 32;
+        public const int SendTranslationRetryCount = 3;
 
         internal class ExceptionMessages
         {

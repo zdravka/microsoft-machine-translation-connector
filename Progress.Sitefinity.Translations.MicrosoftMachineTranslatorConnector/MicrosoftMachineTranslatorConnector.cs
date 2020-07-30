@@ -16,8 +16,8 @@ using Telerik.Sitefinity.Translations;
                                 enabled: false,
                                 removeHtmlTags: false,
                                 parameters: new string[] { Constants.ConfigParameters.ApiKey,
-									Constants.ConfigParameters.Region,
-									Constants.ConfigParameters.BaseUrl})]
+                                    Constants.ConfigParameters.Region,
+                                    Constants.ConfigParameters.BaseUrl})]
 namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 {
     /// <summary>
@@ -49,17 +49,17 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 
             this.key = key;
 
-			var region = config.Get(Constants.ConfigParameters.Region);
-			this.region = region;
+            var region = config.Get(Constants.ConfigParameters.Region);
+            this.region = region;
 
-			var baseURL = config.Get(Constants.ConfigParameters.BaseUrl);
-			if (string.IsNullOrEmpty(baseURL))
-			{
+            var baseURL = config.Get(Constants.ConfigParameters.BaseUrl);
+            if (string.IsNullOrEmpty(baseURL))
+            {
                 baseURL = Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl;
             }
 
-			this.baseUrl = baseURL;
-		}
+            this.baseUrl = baseURL;
+        }
 
         protected override List<string> Translate(List<string> input, ITranslationOptions translationOptions)
         {
@@ -91,24 +91,24 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 return input;
             }
 
-            bool translateindividually = false;
+            bool translateIndividually = false;
 
             // Because the connector does not removeHtmlTags is set to false, we expect to have only 1 input
             foreach (string text in input)
             {
-                if (!string.IsNullOrWhiteSpace(text) && text.Length >= MaxTranslateRequestSize) translateindividually = true;
+                if (!string.IsNullOrWhiteSpace(text) && text.Length >= MaxTranslateRequestSize) translateIndividually = true;
             }
-            if (translateindividually)
+            if (translateIndividually)
             {
                 List<string> resultlist = new List<string>();
                 foreach (string text in input)
                 {
                     List<string> splitstring = SplitString(text, fromLanguageCode);
                     var linetranslation = new StringBuilder();
-                    foreach (string innertext in splitstring)
+                    foreach (string innerText in splitstring)
                     {
-                        var hasTrailingWhiteSpace = innertext.EndsWith(" ");
-                        var innertranslation = TranslateCore(new List<string> { innertext }, translationOptions);
+                        var hasTrailingWhiteSpace = innerText.EndsWith(" ");
+                        var innertranslation = TranslateCore(new List<string> { innerText }, translationOptions);
                         linetranslation.Append(innertranslation[0]);
                         // The translator trims whitespaces by default, so add space if it was there before
                         if (hasTrailingWhiteSpace)
@@ -127,6 +127,32 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
         }
 
         private List<string> TranslateCore(List<string> input, ITranslationOptions translationOptions)
+        {
+            int currentRetry = 0;
+            var translations = new List<string>();
+
+            while (true)
+            {
+                try
+                {
+                    translations = TryTranslate(input, translationOptions);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    currentRetry++;
+
+                    if (currentRetry > Constants.SendTranslationRetryCount)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+
+            return translations;            
+        }
+
+        private List<string> TryTranslate(List<string> input, ITranslationOptions translationOptions)
         {
             var fromLanguageCode = translationOptions.SourceLanguage;
             var toLanguageCode = translationOptions.TargetLanguage;
@@ -148,14 +174,21 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 request.RequestUri = new Uri(uri);
                 request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
                 request.Headers.Add("Ocp-Apim-Subscription-Key", this.key);
-				if (!string.IsNullOrWhiteSpace(this.region))
-				{
-					request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
-				}
+                if (!string.IsNullOrWhiteSpace(this.region))
+                {
+                    request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
+                }
                 request.Headers.Add("X-ClientTraceId", Guid.NewGuid().ToString());
 
-                var response = client.SendAsync(request).Result;
-                var responseBody = response.Content.ReadAsStringAsync().Result;
+                var response = new HttpResponseMessage();
+                var responseTask = client.SendAsync(request);
+                var responseContinuation = responseTask.ContinueWith(r => response = r.Result);
+                responseContinuation.Wait();
+
+                var responseBody = string.Empty;
+                var responseBodyTask = response.Content.ReadAsStringAsync();
+                var responseBodyContinuation = responseBodyTask.ContinueWith(r => responseBody = r.Result);
+                responseBodyContinuation.Wait();
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -366,7 +399,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 
         #endregion
 
-		private string region;
-		private string baseUrl;
+        private string region;
+        private string baseUrl;
     }
 }
