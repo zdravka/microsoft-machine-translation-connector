@@ -370,14 +370,56 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
                 return null;
             };
 
-            try
+            Assert.ThrowsException<AggregateException>(() => this.sut.TranslateCallMock(new List<string>() { null }, this.options));
+            Assert.IsTrue(currentRetry == expectedRetryCount, "If exception occurs, translation should be retryed 2 times, which makes 3 times with the initial try.");
+        }
+
+        [TestMethod]
+        public void Translate_BaseUrlShouldBeTheDefaultOne_IfNotSetInTheConfig()
+        {
+            var testConfig = new NameValueCollection
             {
-                this.sut.TranslateCallMock(new List<string>() { null }, this.options);
-            }
-            catch (Exception)
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) }
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
             {
-                Assert.IsTrue(currentRetry == expectedRetryCount, "If exception occurs, translation should be retryed 2 times, which makes 3 times with the initial try.");
-            }
+                var expectedUrl = $"{Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl}/translate";
+                var actualUrl = x.RequestUri.AbsoluteUri.Split('?')[0];
+
+                Assert.AreEqual(expectedUrl, actualUrl, "BaseUrl should be the default one if it is not set in the config.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
+        public void Translate_BaseUrlShouldBeCorrect_IfSetInTheConfig()
+        {
+            var testUrl = "https://api-apc.cognitive.microsofttranslator.com";
+
+            var testConfig = new NameValueCollection
+            {
+                { Constants.ConfigParameters.BaseUrl, testUrl },
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) },
+                { Constants.ConfigParameters.Region, "eastasia" }
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var expectedUrl = $"{testUrl}/translate";
+                var actualUrl = x.RequestUri.AbsoluteUri.Split('?')[0];
+
+                Assert.AreEqual(expectedUrl, actualUrl, "BaseUrl is not correct. Should be taken from the config if set.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
         }
     }
 }
