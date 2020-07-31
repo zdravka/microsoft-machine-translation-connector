@@ -371,7 +371,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
             };
 
             Assert.ThrowsException<AggregateException>(() => this.sut.TranslateCallMock(new List<string>() { null }, this.options));
-            Assert.IsTrue(currentRetry == expectedRetryCount, "If exception occurs, translation should be retryed 2 times, which makes 3 times with the initial try.");
+            Assert.AreEqual(expectedRetryCount, currentRetry, "If exception occurs, translation should be retryed 2 times, which makes 3 times with the initial try.");
         }
 
         [TestMethod]
