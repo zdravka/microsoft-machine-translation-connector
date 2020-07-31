@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Net.Http;
 using System.Web.Script.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -317,5 +318,65 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
             Assert.IsTrue(reqeustQueryString.Contains(czExpectValue), $"Expected {reqeustQueryString} to contain {czExpectValue}");
         }
 
+        [TestMethod]
+        public void Translate_RegionHeaderShouldBeAvailable_IfRegionIsSet()
+        {
+            var testConfig = new NameValueCollection
+            {
+                { Constants.ConfigParameters.BaseUrl, Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl },
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) },
+                { Constants.ConfigParameters.Region, "australiaeast" }
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var regionHeaders = Enumerable.Empty<string>();
+                x.Headers.TryGetValues("Ocp-Apim-Subscription-Region", out regionHeaders);
+                Assert.IsNotNull(regionHeaders, "Region header should be available if region is set in the config.");
+                Assert.IsTrue(regionHeaders.First().Equals("australiaeast"), "Wrong region header value.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
+        public void Translate_RegionHeaderShouldNotBeAvailable_IfRegionIsMissing()
+        {
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var regionHeaders = Enumerable.Empty<string>();
+                x.Headers.TryGetValues("Ocp-Apim-Subscription-Region", out regionHeaders);
+                Assert.IsNull(regionHeaders, "Region header should not be available if region is not set in the config.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
+        public void Translate_TestRetryCount_IfSomeExceptionOccurs()
+        {
+            var expectedRetryCount = 3;
+            var currentRetry = 0;
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                currentRetry++;
+                return null;
+            };
+
+            try
+            {
+                this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+            }
+            catch (Exception)
+            {
+                Assert.IsTrue(currentRetry == expectedRetryCount, "If exception occurs, translation should be retryed 2 times, which makes 3 times with the initial try.");
+            }
+        }
     }
 }
