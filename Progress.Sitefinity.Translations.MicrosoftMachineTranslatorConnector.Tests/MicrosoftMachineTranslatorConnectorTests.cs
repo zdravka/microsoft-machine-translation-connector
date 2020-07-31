@@ -321,11 +321,12 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
         [TestMethod]
         public void Translate_RegionHeaderShouldBeAvailable_IfRegionIsSet()
         {
+            var region = "australiaeast";
             var testConfig = new NameValueCollection
             {
                 { Constants.ConfigParameters.BaseUrl, Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl },
                 { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) },
-                { Constants.ConfigParameters.Region, "australiaeast" }
+                { Constants.ConfigParameters.Region, region }
             };
             this.sut.InitializeCallMock(testConfig);
 
@@ -334,7 +335,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
                 var regionHeaders = Enumerable.Empty<string>();
                 x.Headers.TryGetValues("Ocp-Apim-Subscription-Region", out regionHeaders);
                 Assert.IsNotNull(regionHeaders, "Region header should be available if region is set in the config.");
-                Assert.IsTrue(regionHeaders.First().Equals("australiaeast"), "Wrong region header value.");
+                Assert.IsTrue(regionHeaders.First().Equals(region), "Wrong region header value.");
 
                 return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
             };
