@@ -5,6 +5,7 @@
         public const string Name = "MicrosoftMachineTranslatorConnector";
         public const string Title = "Machine translation connector for Microsoft Translator";
         public const int ValidApiKeyLength = 32;
+        public const int SendTranslationRetryCount = 2;
 
         internal class ExceptionMessages
         {
@@ -31,8 +32,8 @@
 
         internal struct MicrosoftTranslatorEndpointConstants
         {
-			public const string DefaultEndpointUrl = "https://api.cognitive.microsofttranslator.com";
-			public const string TranslatorPathAndVersion = "/translate?api-version=3.0";
+            public const string DefaultEndpointUrl = "https://api.cognitive.microsofttranslator.com";
+            public const string TranslatorPathAndVersion = "/translate?api-version=3.0";
             public const string TextTypeQueryParam = "textType";
             public const string TargetCultureQueryParam = "to";
             public const string SourceCultureQueryParam = "from";

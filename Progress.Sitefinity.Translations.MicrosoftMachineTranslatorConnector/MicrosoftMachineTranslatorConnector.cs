@@ -1,13 +1,28 @@
-﻿using System;
+﻿/**
+Uses code from Microsoft-Document-Translator
+https://github.com/MicrosoftTranslator/DocumentTranslator 
+licensed under MIT license
+https://github.com/MicrosoftTranslator/DocumentTranslator/blob/master/LICENSE.md
+
+Microsoft-Document-Translator
+
+Copyright (c) Microsoft Corporation
+
+All rights reserved.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
+using Newtonsoft.Json;
 using Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector;
 using Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.Exceptions;
 using Telerik.Sitefinity.Translations;
+
 
 [assembly: TranslationConnector(name: Constants.Name,
                                 connectorType: typeof(MicrosoftMachineTranslatorConnector),
@@ -15,8 +30,8 @@ using Telerik.Sitefinity.Translations;
                                 enabled: false,
                                 removeHtmlTags: false,
                                 parameters: new string[] { Constants.ConfigParameters.ApiKey,
-									Constants.ConfigParameters.Region,
-									Constants.ConfigParameters.BaseUrl})]
+                                    Constants.ConfigParameters.Region,
+                                    Constants.ConfigParameters.BaseUrl})]
 namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 {
     /// <summary>
@@ -48,17 +63,17 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 
             this.key = key;
 
-			var region = config.Get(Constants.ConfigParameters.Region);
-			this.region = region;
+            var region = config.Get(Constants.ConfigParameters.Region);
+            this.region = region;
 
-			var baseURL = config.Get(Constants.ConfigParameters.BaseUrl);
-			if (string.IsNullOrEmpty(baseURL))
-			{
+            var baseURL = config.Get(Constants.ConfigParameters.BaseUrl);
+            if (string.IsNullOrEmpty(baseURL))
+            {
                 baseURL = Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl;
             }
 
-			this.baseUrl = baseURL;
-		}
+            this.baseUrl = baseURL;
+        }
 
         protected override List<string> Translate(List<string> input, ITranslationOptions translationOptions)
         {
@@ -90,6 +105,71 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 return input;
             }
 
+            bool translateIndividually = false;
+
+            // Because the connector does not removeHtmlTags is set to false, we expect to have only 1 input
+            foreach (string text in input)
+            {
+                if (!string.IsNullOrWhiteSpace(text) && text.Length >= MaxTranslateRequestSize) translateIndividually = true;
+            }
+            if (translateIndividually)
+            {
+                List<string> resultlist = new List<string>();
+                foreach (string text in input)
+                {
+                    List<string> splitstring = SplitString(text, fromLanguageCode);
+                    var linetranslation = new StringBuilder();
+                    foreach (string innerText in splitstring)
+                    {
+                        var hasTrailingWhiteSpace = innerText.EndsWith(" ");
+                        var innertranslation = TranslateCore(new List<string> { innerText }, translationOptions);
+                        linetranslation.Append(innertranslation[0]);
+                        // The translator trims whitespaces by default, so add space if it was there before
+                        if (hasTrailingWhiteSpace)
+                        {
+                            linetranslation.Append(" ");
+                        }
+                    }
+                    resultlist.Add(linetranslation.ToString());
+                }
+                return resultlist.ToList();
+            }
+            else
+            {
+                return TranslateCore(input, translationOptions);
+            }
+        }
+
+        private List<string> TranslateCore(List<string> input, ITranslationOptions translationOptions)
+        {
+            int currentRetry = 0;
+            var translations = new List<string>();
+
+            while (true)
+            {
+                try
+                {
+                    translations = TryTranslate(input, translationOptions);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    currentRetry++;
+
+                    if (currentRetry > Constants.SendTranslationRetryCount)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+
+            return translations;            
+        }
+
+        private List<string> TryTranslate(List<string> input, ITranslationOptions translationOptions)
+        {
+            var fromLanguageCode = translationOptions.SourceLanguage;
+            var toLanguageCode = translationOptions.TargetLanguage;
             string uri = GetAzureTranslateEndpointUri(fromLanguageCode, toLanguageCode);
 
             var body = new List<object>();
@@ -108,15 +188,19 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 request.RequestUri = new Uri(uri);
                 request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
                 request.Headers.Add("Ocp-Apim-Subscription-Key", this.key);
-				if (!string.IsNullOrWhiteSpace(this.region))
-				{
-					request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
-				}
+                if (!string.IsNullOrWhiteSpace(this.region))
+                {
+                    request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
+                }
                 request.Headers.Add("X-ClientTraceId", Guid.NewGuid().ToString());
 
-                var response = client.SendAsync(request).Result;
+                var response = new HttpResponseMessage();
+                var responseTask = client.SendAsync(request).ContinueWith(r => response = r.Result);
+                responseTask.Wait();
 
-                var responseBody = response.Content.ReadAsStringAsync().Result;
+                var responseBody = string.Empty;
+                var responseBodyTask = response.Content.ReadAsStringAsync().ContinueWith(r => responseBody = r.Result);
+                responseBodyTask.Wait();
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -226,7 +310,123 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
         }
 
         private string key;
-		private string region;
-		private string baseUrl;
+
+
+        #region code _Adapted_ from https://github.com/MicrosoftTranslator/DocumentTranslator/blob/5cbf1f69e94c249527772ac14d28eea8594a832e/TranslationServices.Core/TranslationServiceFacade.cs
+
+        public static readonly int MaxTranslateRequestSize = 5000;
+
+        /// <summary>
+        /// Split a string > than <see cref="MaxTranslateRequestSize"/> into a list of smaller strings, at the appropriate sentence breaks. 
+        /// </summary>
+        /// <param name="text">The text to split.</param>
+        /// <param name="languagecode">The language code to apply.</param>
+        /// <returns>List of strings, each one smaller than maxrequestsize</returns>
+        private List<string> SplitString(string text, string languagecode)
+        {
+            List<string> result = new List<string>();
+            int previousboundary = 0;
+            if (text.Length <= MaxTranslateRequestSize)
+            {
+                result.Add(text);
+            }
+            else
+            {
+                while (previousboundary <= text.Length)
+                {
+                    int boundary = LastSentenceBreak(text.Substring(previousboundary), languagecode);
+                    if (boundary == 0) break;
+                    result.Add(text.Substring(previousboundary, boundary));
+                    previousboundary += boundary;
+                }
+                result.Add(text.Substring(previousboundary));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the last sentence break in the text.
+        /// </summary>
+        /// <param name="text">The original text</param>
+        /// <param name="languagecode">A language code</param>
+        /// <returns>The offset of the last sentence break, from the beginning of the text.</returns>
+        private int LastSentenceBreak(string text, string languagecode)
+        {
+            int sum = 0;
+            List<int> breakSentenceResult = BreakSentences(text, languagecode);
+            for (int i = 0; i < breakSentenceResult.Count - 1; i++) sum += breakSentenceResult[i];
+            return sum;
+        }
+
+
+        /// <summary>
+        /// Breaks string into sentences. The string will be cut off at maxrequestsize. 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="language"></param>
+        /// <returns>List of integers denoting the offset of the sentence boundaries</returns>
+        public List<int> BreakSentences(string text, string languagecode)
+        {
+            if (String.IsNullOrEmpty(text) || String.IsNullOrWhiteSpace(text)) return null;
+            string path = "/breaksentence?api-version=3.0";
+            string params_ = "&language=" + languagecode;
+            string uri = this.baseUrl + path + params_;
+            object[] body = new object[] { new { Text = text.Substring(0, (text.Length < MaxTranslateRequestSize) ? text.Length : MaxTranslateRequestSize) } };
+            string requestBody = JsonConvert.SerializeObject(body);
+            List<int> resultList = new List<int>();
+
+            using (var client = this.GetClient())
+            using (HttpRequestMessage request = new HttpRequestMessage())
+            {
+                request.Method = HttpMethod.Post;
+                request.RequestUri = new Uri(uri);
+                request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+                request.Headers.Add("Ocp-Apim-Subscription-Key", this.key);
+                if (!string.IsNullOrWhiteSpace(this.region))
+                {
+                    request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
+                }
+
+                var response = new HttpResponseMessage();
+                var responseTask = client.SendAsync(request).ContinueWith(r => response = r.Result);
+                responseTask.Wait();
+
+                var result = string.Empty;
+                var resultTask = response.Content.ReadAsStringAsync().ContinueWith(r => result = r.Result);
+                resultTask.Wait();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    this.HandleApiError(result, response);
+                }
+
+                BreakSentenceResult[] deserializedOutput = JsonConvert.DeserializeObject<BreakSentenceResult[]>(result);
+                foreach (BreakSentenceResult o in deserializedOutput)
+                {
+                    //Console.WriteLine("The detected language is '{0}'. Confidence is: {1}.", o.DetectedLanguage.Language, o.DetectedLanguage.Score);
+                    //Console.WriteLine("The first sentence length is: {0}", o.SentLen[0]);
+                    resultList = o.SentLen.ToList();
+                }
+            }
+            return resultList;
+        }
+
+        // Used in the BreakSentences method.
+        private class BreakSentenceResult
+        {
+            public int[] SentLen { get; set; }
+            public DetectedLanguage DetectedLanguage { get; set; }
+        }
+
+        private class DetectedLanguage
+        {
+            public string Language { get; set; }
+            public float Score { get; set; }
+        }
+
+        #endregion
+
+        private string region;
+        private string baseUrl;
     }
 }

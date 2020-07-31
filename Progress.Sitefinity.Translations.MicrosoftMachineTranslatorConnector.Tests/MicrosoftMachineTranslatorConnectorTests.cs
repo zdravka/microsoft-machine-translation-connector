@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Net.Http;
 using System.Web.Script.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -15,6 +16,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
         private TestableMicrosoftMachineTranslatorConnector sut;
         private MockedTranslationOptions options;
         private const string SuccessfulTranslationResponseTemplate = "[{{\"translations\" : [{{\"text\":\"{0}\"}}]}}]";
+        private const string SuccessfulBreakSentenceTemplate = "[{{\"sentLen\": [{0}]}}]";
         private readonly string GenericTranslatedText = "translated_text";
         private string GenericSuccessfulTranslationResponse => string.Format(SuccessfulTranslationResponseTemplate, GenericTranslatedText);
 
@@ -135,6 +137,43 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
 
             // assert
             Assert.AreEqual(GenericTranslatedText, result[0]);
+        }
+
+        [TestMethod]
+        public void Translate_SuccessfulTransaltionsVLargeRequestRequest_ReturnsCollectionWithTranslation()
+        {
+            // arrange
+            int textLength = MicrosoftMachineTranslatorConnector.MaxTranslateRequestSize * 2;
+            var requestCount = 0;
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                if (x.RequestUri.PathAndQuery.Contains("breaksentence"))
+                {
+                    var response = new HttpResponseMessage()
+                    {
+                        StatusCode = System.Net.HttpStatusCode.OK,
+                        // First call we send 5000 chars, we take the first 4000. Second call is the same. For the last call we sned only the last 2000 chars.
+                        Content = new StringContent(string.Format(SuccessfulBreakSentenceTemplate, requestCount < 2 ? "4000, 1000" : "2000"))
+                    };
+                    requestCount++;
+                    return response;
+                }
+                else
+                {
+                    return new HttpResponseMessage()
+                    {
+                        StatusCode = System.Net.HttpStatusCode.OK,
+                        Content = new StringContent(GenericSuccessfulTranslationResponse)
+                    };
+                }
+            };
+
+            // act
+            var result = this.sut.TranslateCallMock(new List<string>() { new string('L', textLength) }, this.options);
+
+            // assert
+            var expectedString = string.Concat(GenericTranslatedText, GenericTranslatedText, GenericTranslatedText);
+            Assert.AreEqual(expectedString, result[0]);
         }
 
         [TestMethod]
@@ -279,5 +318,108 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
             Assert.IsTrue(reqeustQueryString.Contains(czExpectValue), $"Expected {reqeustQueryString} to contain {czExpectValue}");
         }
 
+        [TestMethod]
+        public void Translate_RegionHeaderShouldBeAvailable_IfRegionIsSet()
+        {
+            var region = "australiaeast";
+            var testConfig = new NameValueCollection
+            {
+                { Constants.ConfigParameters.BaseUrl, Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl },
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) },
+                { Constants.ConfigParameters.Region, region }
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var regionHeaders = Enumerable.Empty<string>();
+                x.Headers.TryGetValues("Ocp-Apim-Subscription-Region", out regionHeaders);
+                Assert.IsNotNull(regionHeaders, "Region header should be available if region is set in the config.");
+                Assert.IsTrue(regionHeaders.First().Equals(region), "Wrong region header value.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
+        public void Translate_RegionHeaderShouldNotBeAvailable_IfRegionIsMissing()
+        {
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var regionHeaders = Enumerable.Empty<string>();
+                x.Headers.TryGetValues("Ocp-Apim-Subscription-Region", out regionHeaders);
+                Assert.IsNull(regionHeaders, "Region header should not be available if region is not set in the config.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
+        public void Translate_TestRetryCount_IfSomeExceptionOccurs()
+        {
+            var expectedRetryCount = 3;
+            var currentRetry = 0;
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                currentRetry++;
+                return null;
+            };
+
+            Assert.ThrowsException<AggregateException>(() => this.sut.TranslateCallMock(new List<string>() { null }, this.options));
+            Assert.AreEqual(expectedRetryCount, currentRetry, "If exception occurs, translation should be retryed 2 times, which makes 3 times with the initial try.");
+        }
+
+        [TestMethod]
+        public void Translate_BaseUrlShouldBeTheDefaultOne_IfNotSetInTheConfig()
+        {
+            var testConfig = new NameValueCollection
+            {
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) }
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var expectedUrl = $"{Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl}/translate";
+                var actualUrl = x.RequestUri.AbsoluteUri.Split('?')[0];
+
+                Assert.AreEqual(expectedUrl, actualUrl, "BaseUrl should be the default one if it is not set in the config.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
+        public void Translate_BaseUrlShouldBeCorrect_IfSetInTheConfig()
+        {
+            var testUrl = "https://api-apc.cognitive.microsofttranslator.com";
+
+            var testConfig = new NameValueCollection
+            {
+                { Constants.ConfigParameters.BaseUrl, testUrl },
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) },
+                { Constants.ConfigParameters.Region, "eastasia" }
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var expectedUrl = $"{testUrl}/translate";
+                var actualUrl = x.RequestUri.AbsoluteUri.Split('?')[0];
+
+                Assert.AreEqual(expectedUrl, actualUrl, "BaseUrl is not correct. Should be taken from the config if set.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
     }
 }
