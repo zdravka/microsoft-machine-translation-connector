@@ -344,6 +344,54 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
         }
 
         [TestMethod]
+        public void Translate_CategoryAndAllowFallbackPropertiesShouldBeAvailableInTheUrl_IfSet()
+        {
+            var category = "general";
+            var allowFallback = "true";
+            var testConfig = new NameValueCollection
+            {
+                { Constants.ConfigParameters.BaseUrl, Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl },
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) },
+                { Constants.ConfigParameters.Category, category },
+                { Constants.ConfigParameters.AllowFallback, allowFallback },
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var queryString = x.RequestUri.Query;
+                Assert.IsTrue(queryString.Contains($"&category={category}"), "category property missing from the query string.");
+                Assert.IsTrue(queryString.Contains($"&allowFallback={allowFallback}"), "allowFallback property missing from the query string.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
+        public void Translate_CategoryAndAllowFallbackPropertiesShouldBeMissingInTheUrl_IfNotSet()
+        {
+            var testConfig = new NameValueCollection
+            {
+                { Constants.ConfigParameters.BaseUrl, Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl },
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) }
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var queryString = x.RequestUri.Query;
+                Assert.IsFalse(queryString.Contains($"&category="), "category property should not be available in the url if not set.");
+                Assert.IsFalse(queryString.Contains($"&allowFallback="), "allowFallback property should not be available in the url if not set.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
         public void Translate_RegionHeaderShouldNotBeAvailable_IfRegionIsMissing()
         {
             this.sut.mockedHttpClientSendAsyncDelegate = x =>
