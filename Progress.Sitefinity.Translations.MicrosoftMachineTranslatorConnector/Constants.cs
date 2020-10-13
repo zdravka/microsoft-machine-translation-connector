@@ -28,6 +28,8 @@
 			public const string BaseUrl = "baseURL";
             public const string ApiKey = "apiKey";
 			public const string Region = "region";
+			public const string Category = "category";
+			public const string AllowFallback = "allowFallback";
         }
 
         internal struct MicrosoftTranslatorEndpointConstants
