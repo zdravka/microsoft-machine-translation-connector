@@ -32,8 +32,7 @@ using Telerik.Sitefinity.Translations;
                                 parameters: new string[] { Constants.ConfigParameters.ApiKey,
                                     Constants.ConfigParameters.Region,
                                     Constants.ConfigParameters.BaseUrl,
-                                    Constants.ConfigParameters.Category,
-                                    Constants.ConfigParameters.AllowFallback})]
+                                    Constants.ConfigParameters.QueryString})]
 namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 {
     /// <summary>
@@ -76,11 +75,8 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 
             this.baseUrl = baseURL;
 
-            var category = config.Get(Constants.ConfigParameters.Category);
-            this.category = category;
-
-            var allowFallback = config.Get(Constants.ConfigParameters.AllowFallback);
-            this.allowFallback = allowFallback;
+            var queryString = config.Get(Constants.ConfigParameters.QueryString);
+            this.queryString = queryString;
         }
 
         protected override List<string> Translate(List<string> input, ITranslationOptions translationOptions)
@@ -264,11 +260,15 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             if (!IsRemoveHtmlTagsEnabled())
                 uri += $"&{Constants.MicrosoftTranslatorEndpointConstants.TextTypeQueryParam}=html";
 
-            if (!string.IsNullOrEmpty(this.category))
-                uri += $"&{Constants.ConfigParameters.Category}={this.category}";
+            if (!string.IsNullOrEmpty(this.queryString))
+            {
+                if (this.queryString.StartsWith("?") || this.queryString.StartsWith("&"))
+                {
+                    this.queryString = this.queryString.Remove(0, 1);
+                }
 
-            if (!string.IsNullOrEmpty(this.allowFallback))
-                uri += $"&{Constants.ConfigParameters.AllowFallback}={this.allowFallback}";
+                uri += $"&{this.queryString}";
+            }
 
             return uri;
         }
@@ -440,7 +440,6 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 
         private string region;
         private string baseUrl;
-        private string category;
-        private string allowFallback;
+        private string queryString;
     }
 }
