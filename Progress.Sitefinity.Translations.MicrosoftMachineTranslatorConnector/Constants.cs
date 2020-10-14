@@ -28,6 +28,7 @@
 			public const string BaseUrl = "baseURL";
             public const string ApiKey = "apiKey";
 			public const string Region = "region";
+			public const string QueryString = "queryString";
         }
 
         internal struct MicrosoftTranslatorEndpointConstants

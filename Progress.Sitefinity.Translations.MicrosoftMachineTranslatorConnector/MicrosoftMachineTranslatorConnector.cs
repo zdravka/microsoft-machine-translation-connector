@@ -31,7 +31,8 @@ using Telerik.Sitefinity.Translations;
                                 removeHtmlTags: false,
                                 parameters: new string[] { Constants.ConfigParameters.ApiKey,
                                     Constants.ConfigParameters.Region,
-                                    Constants.ConfigParameters.BaseUrl})]
+                                    Constants.ConfigParameters.BaseUrl,
+                                    Constants.ConfigParameters.QueryString})]
 namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 {
     /// <summary>
@@ -73,6 +74,9 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             }
 
             this.baseUrl = baseURL;
+
+            var queryString = config.Get(Constants.ConfigParameters.QueryString);
+            this.queryString = queryString;
         }
 
         protected override List<string> Translate(List<string> input, ITranslationOptions translationOptions)
@@ -163,7 +167,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 }
             }
 
-            return translations;            
+            return translations;
         }
 
         private List<string> TryTranslate(List<string> input, ITranslationOptions translationOptions)
@@ -252,10 +256,18 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 $"{this.baseUrl}{Constants.MicrosoftTranslatorEndpointConstants.TranslatorPathAndVersion}&{Constants.MicrosoftTranslatorEndpointConstants.SourceCultureQueryParam }={{0}}&{Constants.MicrosoftTranslatorEndpointConstants.TargetCultureQueryParam }={{1}}",
                 fromLanguageCode,
                 toLanguageCode);
-            if (!IsRemoveHtmlTagsEnabled())
-            {
 
+            if (!IsRemoveHtmlTagsEnabled())
                 uri += $"&{Constants.MicrosoftTranslatorEndpointConstants.TextTypeQueryParam}=html";
+
+            if (!string.IsNullOrEmpty(this.queryString))
+            {
+                if (this.queryString.StartsWith("?") || this.queryString.StartsWith("&"))
+                {
+                    this.queryString = this.queryString.Remove(0, 1);
+                }
+
+                uri += $"&{this.queryString}";
             }
 
             return uri;
@@ -428,5 +440,6 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 
         private string region;
         private string baseUrl;
+        private string queryString;
     }
 }

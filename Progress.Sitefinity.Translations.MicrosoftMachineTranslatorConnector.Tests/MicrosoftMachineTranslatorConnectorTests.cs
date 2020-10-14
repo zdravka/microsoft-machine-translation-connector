@@ -344,6 +344,29 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector.T
         }
 
         [TestMethod]
+        public void Translate_QueryStringShouldBeAvailableInTheUrl_IfSet()
+        {
+            var expectedQueryString = "category=general&allowFallback=true";
+            var testConfig = new NameValueCollection
+            {
+                { Constants.ConfigParameters.BaseUrl, Constants.MicrosoftTranslatorEndpointConstants.DefaultEndpointUrl },
+                { Constants.ConfigParameters.ApiKey, new string('*', Constants.ValidApiKeyLength) },
+                { Constants.ConfigParameters.QueryString, expectedQueryString },
+            };
+            this.sut.InitializeCallMock(testConfig);
+
+            this.sut.mockedHttpClientSendAsyncDelegate = x =>
+            {
+                var actualQueryString = x.RequestUri.Query;
+                Assert.IsTrue(actualQueryString.Contains($"{expectedQueryString}"), "category property missing from the query string.");
+
+                return new HttpResponseMessage() { Content = new StringContent(GenericSuccessfulTranslationResponse) };
+            };
+
+            this.sut.TranslateCallMock(new List<string>() { null }, this.options);
+        }
+
+        [TestMethod]
         public void Translate_RegionHeaderShouldNotBeAvailable_IfRegionIsMissing()
         {
             this.sut.mockedHttpClientSendAsyncDelegate = x =>
