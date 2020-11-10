@@ -14,9 +14,12 @@ All rights reserved.
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Web.Script.Serialization;
 using Newtonsoft.Json;
 using Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector;
@@ -83,6 +86,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
         {
             if (translationOptions == null)
             {
+                this.Log("translationOptions is null");
                 throw new ArgumentException(GetTranslаteArgumentExceptionMessage(nameof(translationOptions)));
             }
 
@@ -91,21 +95,25 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
 
             if (string.IsNullOrWhiteSpace(fromLanguageCode))
             {
+                this.Log("fromLanguageCode is null");
                 throw new ArgumentException(GetTranslаteArgumentExceptionMessage($"{nameof(translationOptions)}.{nameof(translationOptions.SourceLanguage)}"));
             }
 
             if (string.IsNullOrWhiteSpace(toLanguageCode))
             {
+                this.Log("toLanguageCode is null");
                 throw new ArgumentException(GetTranslаteArgumentExceptionMessage($"{nameof(translationOptions)}.{nameof(translationOptions.TargetLanguage)}"));
             }
 
             if (input == null || input.Count == 0)
             {
+                this.Log("input is null or count is 0");
                 throw new ArgumentException(GetTranslаteArgumentExceptionMessage(nameof(input)));
             }
 
             if (fromLanguageCode == toLanguageCode)
             {
+                this.Log("fromLanguageCode == toLanguageCode");
                 return input;
             }
 
@@ -116,6 +124,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             {
                 if (!string.IsNullOrWhiteSpace(text) && text.Length >= MaxTranslateRequestSize) translateIndividually = true;
             }
+            this.Log($"translateIndividually is {translateIndividually} input.Count() is {input.Count()}");
             if (translateIndividually)
             {
                 List<string> resultlist = new List<string>();
@@ -153,15 +162,19 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             {
                 try
                 {
-                    translations = TryTranslate(input, translationOptions);
+                    //translations = TryTranslate(input, translationOptions);
+                    translations = TryTranslateSync(input, translationOptions);
                     break;
                 }
                 catch (Exception ex)
                 {
+                    this.Log($"TranslateCore exception {ex.Message}");
+
                     currentRetry++;
 
                     if (currentRetry > Constants.SendTranslationRetryCount)
                     {
+                        this.Log($"TranslateCore exception {ex.Message}, currentRetry = {currentRetry}");
                         throw ex;
                     }
                 }
@@ -220,8 +233,11 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 {
                     if (IsSerializationException(ex))
                     {
+                        this.Log($"TryTranslate exception Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                         throw new MicrosoftTranslatorConnectorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingResponseFromServer} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                     }
+
+                    this.Log($"TryTranslate exception {ex.Message}");
 
                     throw;
                 }
@@ -240,14 +256,101 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 {
                     if (ex is KeyNotFoundException || ex is NullReferenceException)
                     {
+                        this.Log($"TryTranslate KeyNotFoundException || NullReferenceException: {ex.Message} {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                         throw new MicrosoftTranslatorConnectorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                     }
 
+                    this.Log($"TryTranslate NOT KeyNotFoundException || NullReferenceException: {ex.Message} {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                     throw;
                 }
 
                 return translations;
             }
+        }
+
+        private List<string> TryTranslateSync(List<string> input, ITranslationOptions translationOptions)
+        {
+            var fromLanguageCode = translationOptions.SourceLanguage;
+            var toLanguageCode = translationOptions.TargetLanguage;
+            string uri = GetAzureTranslateEndpointUri(fromLanguageCode, toLanguageCode);
+
+            var body = new List<object>();
+            foreach (var text in input)
+            {
+                body.Add(new { Text = text ?? string.Empty });
+            }
+
+            var serializer = new JavaScriptSerializer();
+            string requestBody = serializer.Serialize(body);
+            HttpWebRequest request = WebRequest.CreateHttp(uri);
+
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            using (var requestStream = request.GetRequestStream())
+            {
+                using (var writer = new StreamWriter(requestStream))
+                {
+                    writer.Write(requestBody);
+                }
+            }
+
+            request.Headers.Add("Ocp-Apim-Subscription-Key", this.key);
+            if (!string.IsNullOrWhiteSpace(this.region))
+            {
+                request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
+            }
+            request.Headers.Add("X-ClientTraceId", Guid.NewGuid().ToString());
+
+            dynamic result;
+            HttpWebResponse response = null;
+            string responseBody = string.Empty;
+            using (response = (HttpWebResponse)request.GetResponse())
+            using (Stream responseStream = response.GetResponseStream())
+            {
+                using (StreamReader myStreamReader = new StreamReader(responseStream, Encoding.UTF8))
+                {
+                    responseBody = myStreamReader.ReadToEnd();
+
+                    try
+                    {
+                        result = serializer.DeserializeObject(responseBody);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Log($"TryTranslateSync exception {ex.Message}");
+                        if (IsSerializationException(ex))
+                        {
+                            throw new MicrosoftTranslatorConnectorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingResponseFromServer} Server response: {response.StatusCode} {response.StatusDescription} {responseBody}");
+                        }
+
+                        throw;
+                    }
+                }
+            }
+
+            var translations = new List<string>();
+            try
+            {
+                for (int i = 0; i < input.Count(); i++)
+                {
+                    // currently Sitefinity does not support sending multiple languages at once, only multiple strings
+                    var translation = result[i]["translations"][0]["text"];
+                    translations.Add(translation);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is KeyNotFoundException || ex is NullReferenceException)
+                {
+                    this.Log($"TryTranslateSync KeyNotFoundException || NullReferenceException: {ex.Message} {response.StatusCode} {response.StatusDescription} {responseBody}");
+                    throw new MicrosoftTranslatorConnectorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedResponseFormat} Server response: {response.StatusCode} {response.StatusDescription} {responseBody}");
+                }
+
+                this.Log($"TryTranslateSync NOT KeyNotFoundException || NullReferenceException: {ex.Message} {response.StatusCode} {response.StatusDescription} {responseBody}");
+                throw;
+            }
+
+            return translations;
         }
 
         private string GetAzureTranslateEndpointUri(string fromLanguageCode, string toLanguageCode)
@@ -295,23 +398,28 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             {
                 if (IsSerializationException(ex))
                 {
+                    this.Log($"HandleApiError IsSerializationException: {ex.Message} {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                     throw new MicrosoftTranslatorConnectorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingErrorResponseFromServer} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                 }
 
+                this.Log($"HandleApiError NOT IsSerializationException: {ex.Message} {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                 throw;
             }
 
             try
             {
+                this.Log($"HandleApiError new MicrosoftTranslatorConnectorException");
                 throw new MicrosoftTranslatorConnectorException(jsonResponse["error"]["message"]);
             }
             catch (Exception ex)
             {
                 if (ex is KeyNotFoundException || ex is NullReferenceException)
                 {
+                    this.Log($"HandleApiError Exception: {ex.Message} {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                     throw new MicrosoftTranslatorConnectorResponseFormatException($"{Constants.ExceptionMessages.UnexpectedErrorResponseFormat} Server response: {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                 }
 
+                this.Log($"HandleApiError NOT Exception: {ex.Message} {response.StatusCode} {response.ReasonPhrase} {responseBody}");
                 throw;
             }
         }
@@ -346,11 +454,14 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
             {
                 while (previousboundary <= text.Length)
                 {
+                    this.Log($"SplitString start while loop previousboundary = {previousboundary} text.Length = {text.Length}");
                     int boundary = LastSentenceBreak(text.Substring(previousboundary), languagecode);
+                    this.Log($"SplitString boundry = {boundary}");
                     if (boundary == 0) break;
                     result.Add(text.Substring(previousboundary, boundary));
                     previousboundary += boundary;
                 }
+                this.Log($"SplitString end while loop");
                 result.Add(text.Substring(previousboundary));
             }
             return result;
@@ -365,7 +476,7 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
         private int LastSentenceBreak(string text, string languagecode)
         {
             int sum = 0;
-            List<int> breakSentenceResult = BreakSentences(text, languagecode);
+            List<int> breakSentenceResult = BreakSentencesSync(text, languagecode);
             for (int i = 0; i < breakSentenceResult.Count - 1; i++) sum += breakSentenceResult[i];
             return sum;
         }
@@ -421,6 +532,82 @@ namespace Progress.Sitefinity.Translations.MicrosoftMachineTranslatorConnector
                 }
             }
             return resultList;
+        }
+
+        public List<int> BreakSentencesSync(string text, string languagecode)
+        {
+            if (String.IsNullOrEmpty(text) || String.IsNullOrWhiteSpace(text)) return null;
+            string path = "/breaksentence?api-version=3.0";
+            string params_ = "&language=" + languagecode;
+            string uri = this.baseUrl + path + params_;
+            object[] body = new object[] { new { Text = text.Substring(0, (text.Length < MaxTranslateRequestSize) ? text.Length : MaxTranslateRequestSize) } };
+            string requestBody = JsonConvert.SerializeObject(body);
+            List<int> resultList = new List<int>();
+
+            HttpWebRequest request = WebRequest.CreateHttp(uri);
+
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            using (var requestStream = request.GetRequestStream())
+            {
+                using (var writer = new StreamWriter(requestStream))
+                {
+                    writer.Write(requestBody);
+                }
+            }
+
+            request.Headers.Add("Ocp-Apim-Subscription-Key", this.key);
+            if (!string.IsNullOrWhiteSpace(this.region))
+            {
+                request.Headers.Add("Ocp-Apim-Subscription-Region", this.region);
+            }
+
+            dynamic result;
+            HttpWebResponse response = null;
+            string responseBody = string.Empty;
+            using (response = (HttpWebResponse)request.GetResponse())
+            using (Stream responseStream = response.GetResponseStream())
+            using (StreamReader myStreamReader = new StreamReader(responseStream, Encoding.UTF8))
+            {
+                responseBody = myStreamReader.ReadToEnd();
+
+                try
+                {
+                    result = JsonConvert.DeserializeObject<BreakSentenceResult[]>(responseBody);
+                }
+                catch (Exception ex)
+                {
+                    this.Log($"BreakSentencesSyncSync exception {ex.Message}");
+                    if (IsSerializationException(ex))
+                    {
+                        throw new MicrosoftTranslatorConnectorSerializationException($"{Constants.ExceptionMessages.ErrorSerializingResponseFromServer} Server response: {response.StatusCode} {response.StatusDescription} {responseBody}");
+                    }
+
+                    throw;
+                }
+            }
+            
+            foreach (BreakSentenceResult o in result)
+            {
+                //Console.WriteLine("The detected language is '{0}'. Confidence is: {1}.", o.DetectedLanguage.Language, o.DetectedLanguage.Score);
+                //Console.WriteLine("The first sentence length is: {0}", o.SentLen[0]);
+                resultList = o.SentLen.ToList();
+            }
+
+            return resultList;
+        }
+
+        private void Log(string message)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("--------------------------------------------------");
+            sb.AppendLine(DateTime.Now.ToString());
+            sb.AppendLine(message);
+            sb.AppendLine("--------------------------------------------------");
+            // flush every 20 seconds as you do it
+            File.AppendAllText($"{AppDomain.CurrentDomain.BaseDirectory}\\log.txt", sb.ToString());
+            sb.Clear();
         }
 
         // Used in the BreakSentences method.
