@@ -1,7 +1,7 @@
 Machine translation connector for Microsoft Translator
 ===========================================
 
->**Latest supported version**: Sitefinity CMS 13.3.7600.0
+>**Latest supported version**: Sitefinity CMS 14.0.7700.0
 
 >**Documentation articles**: [Custom translation connector](http://www.progress.com/documentation/sitefinity-cms/custom-translation-connector)
 
